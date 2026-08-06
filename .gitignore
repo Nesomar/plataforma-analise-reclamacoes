@@ -1,0 +1,25 @@
+# Segredos — nunca versionar
+.env
+.env.*
+!.env.example
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Saída gerada
+relatorio*.html
+saida/
+.cache_analises.json
+
+# Editor / SO
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

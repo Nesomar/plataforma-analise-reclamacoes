@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sessão de Brainstorming — Plataforma de Análise de Reclamações</title>
+<style>
+:root{
+  --bg:#faf8f5; --ink:#1c1a18; --dim:#6b6560; --line:#ddd6cc;
+  --card:#ffffff; --accent:#b8341f; --accent-soft:#fdeeeb;
+  --amber:#b07407; --amber-soft:#fdf4e3; --green:#2f6b42; --green-soft:#eaf3ec;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#14120f; --ink:#ece7e0; --dim:#948d84; --line:#2f2a25;
+    --card:#1c1915; --accent:#e8654c; --accent-soft:#2a1512;
+    --amber:#e0a33e; --amber-soft:#2a2011; --green:#6cbf85; --green-soft:#142218;
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:16px/1.65 Georgia,"Iowan Old Style","Times New Roman",serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px 120px}
+
+/* ---- capa ---- */
+header{padding:96px 0 56px;border-bottom:1px solid var(--line)}
+.kicker{font:600 11px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:20px}
+h1{font-size:clamp(30px,5.5vw,46px);line-height:1.12;margin:0 0 18px;font-weight:400;letter-spacing:-.02em}
+.sub{color:var(--dim);font-size:17px;max-width:56ch;margin:0}
+.meta{margin-top:32px;font:12px/1.9 var(--mono);color:var(--dim)}
+.meta b{color:var(--ink);font-weight:600}
+
+/* ---- estrutura ---- */
+section{padding:56px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+.tag{display:inline-block;font:600 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);border:1px solid var(--line);border-radius:99px;padding:6px 11px;margin-bottom:18px}
+h2{font-size:27px;font-weight:400;letter-spacing:-.015em;margin:0 0 8px}
+h3{font-size:16px;font-weight:600;margin:32px 0 10px;letter-spacing:-.005em}
+.lede{color:var(--dim);margin:0 0 28px;font-size:15.5px}
+p{margin:0 0 16px}
+
+/* ---- citação do usuário ---- */
+blockquote{
+  margin:26px 0;padding:0 0 0 26px;position:relative;
+  font-style:italic;font-size:18.5px;line-height:1.5;
+}
+blockquote::before{content:"\201C";position:absolute;left:-2px;top:-2px;
+  font:400 42px/1 Georgia,serif;color:var(--accent);font-style:normal}
+blockquote cite{display:block;margin-top:8px;font:11px/1 var(--mono);font-style:normal;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+
+/* ---- grade morfológica ---- */
+.grid-morf{width:100%;border-collapse:collapse;font-size:13.5px;margin:20px 0;font-family:system-ui,sans-serif}
+.grid-morf th{text-align:left;font:600 10px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;
+  color:var(--dim);padding:0 10px 10px;border-bottom:1px solid var(--line)}
+.grid-morf td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.grid-morf td:first-child{font:600 12px var(--mono);color:var(--accent);width:26px}
+.opt{color:var(--dim)}
+.opt.pick{color:var(--ink);font-weight:600;background:var(--amber-soft);
+  padding:2px 7px;border-radius:4px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.sep{color:var(--line);padding:0 4px}
+
+/* ---- casos ---- */
+.casos{display:grid;gap:12px;margin:24px 0}
+.caso{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px 18px;
+  display:grid;grid-template-columns:34px 1fr auto;gap:14px;align-items:start}
+.caso .n{font:600 20px var(--mono);color:var(--line)}
+.caso .t{font-weight:600;font-size:15px;margin-bottom:3px;font-family:system-ui,sans-serif}
+.caso .d{font-size:13.5px;color:var(--dim);font-family:system-ui,sans-serif;line-height:1.5}
+.flag{font:600 10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;
+  padding:6px 9px;border-radius:5px;white-space:nowrap}
+.flag.fila{background:var(--accent-soft);color:var(--accent)}
+.flag.fora{background:transparent;color:var(--dim);border:1px solid var(--line)}
+.flag.virou{background:var(--amber-soft);color:var(--amber)}
+
+/* ---- placar dos sinais ---- */
+.placar{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:26px 0}
+.sinal{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:20px}
+.sinal .l{font:600 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.sinal .v{font:300 42px/1 system-ui,sans-serif;margin:10px 0 4px;letter-spacing:-.03em}
+.sinal .c{font-size:13px;color:var(--dim);font-family:system-ui,sans-serif}
+.sinal.a .v{color:var(--dim)}
+.sinal.b .v{color:var(--accent)}
+
+/* ---- parcelas do score ---- */
+.parcelas{counter-reset:p;margin:22px 0;padding:0;list-style:none}
+.parcelas li{counter-increment:p;position:relative;padding:14px 0 14px 46px;border-bottom:1px solid var(--line);
+  font-family:system-ui,sans-serif;font-size:14.5px}
+.parcelas li:last-child{border-bottom:0}
+.parcelas li::before{content:counter(p);position:absolute;left:0;top:14px;
+  width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
+  font:600 12px/28px var(--mono);text-align:center}
+.parcelas b{font-weight:600}
+
+/* ---- moscow ---- */
+.moscow{display:grid;gap:12px;margin:22px 0}
+.tier{border-radius:8px;padding:16px 18px;border:1px solid var(--line);background:var(--card)}
+.tier h4{margin:0 0 12px;padding-bottom:9px;border-bottom:1px solid var(--line);
+  font:600 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+  display:flex;align-items:center;gap:9px}
+.tier h4::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
+.tier.must h4{color:var(--accent)}
+.tier.should h4{color:var(--amber)}
+.tier.could h4{color:var(--dim)}
+.tier.wont{opacity:.62} .tier.wont h4{color:var(--dim)}
+.tier.wont h4::before{background:transparent;box-shadow:inset 0 0 0 1.5px currentColor}
+.tier ul{margin:0;padding-left:18px;font-size:14px;font-family:system-ui,sans-serif;line-height:1.7}
+.tier.wont li{text-decoration:line-through;text-decoration-color:var(--dim)}
+
+/* ---- síntese ---- */
+.conn{margin:22px 0 0;padding:0;list-style:none;counter-reset:c}
+.conn li{counter-increment:c;position:relative;padding:22px 0 22px 54px;border-bottom:1px solid var(--line)}
+.conn li:last-child{border-bottom:0}
+.conn li::before{content:counter(c);position:absolute;left:0;top:20px;font:300 30px/1 system-ui,sans-serif;
+  color:var(--line);letter-spacing:-.03em}
+.conn h4{margin:0 0 7px;font-size:16.5px;font-weight:600;letter-spacing:-.01em}
+.conn p{margin:0;font-size:14.5px;color:var(--dim);font-family:system-ui,sans-serif;line-height:1.65}
+
+/* ---- final ---- */
+.encerra{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:26px 28px;margin-top:40px}
+.encerra h3{margin-top:0}
+.files{font:12.5px/2.1 var(--mono);color:var(--dim);margin:0;padding:0;list-style:none}
+.files b{color:var(--ink);font-weight:600}
+footer{padding:44px 0 0;color:var(--dim);font:11px/1.8 var(--mono);text-align:center}
+
+@media(max-width:620px){
+  .placar{grid-template-columns:1fr}
+  .caso{grid-template-columns:28px 1fr;gap:10px}
+  .caso .flag{grid-column:2}
+  header{padding:56px 0 40px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">Sessão de Brainstorming · 06 · 08 · 2026</div>
+  <h1>Como um sistema descobre<br>quem está prestes a processar<br>a empresa</h1>
+  <p class="sub">Seis técnicas, cinco reclamações reais e uma descoberta que derrubou a premissa
+  com que a sessão tinha começado.</p>
+  <div class="meta">
+    PROJETO &nbsp;<b>plataforma-analise-reclamacoes</b><br>
+    MODO &nbsp;<b>Parceiro Criativo</b> &nbsp;·&nbsp; OBJETIVO &nbsp;<b>estudo</b><br>
+    STACK &nbsp;<b>Python · LangGraph · Google AI Studio</b>
+  </div>
+</header>
+
+<section>
+  <div class="tag">01 · Question Storming</div>
+  <h2>O terreno</h2>
+  <p class="lede">A técnica pedia só perguntas. Vieram respostas — e elas valiam mais.</p>
+
+  <p>Três definições saíram nos primeiros minutos e sustentaram tudo o que veio depois:</p>
+
+  <blockquote>
+    Risco jurídico é uma classificação para ajudar a identificar as reclamações que precisam ser
+    atendidas mais rápido.
+    <cite>— definição que virou a espinha do sistema</cite>
+  </blockquote>
+
+  <p>Não é probabilidade. É <b>fila</b>. E o erro que dói mais é o falso positivo: marcar risco onde
+  não tem entope a fila e o gestor para de confiar no relatório em duas semanas.</p>
+
+  <p>A arquitetura desejada também apareceu aqui: um agente para normalizar o CSV, um para os
+  guard-rails, um para processar. Separação por etapa do fluxo.</p>
+</section>
+
+<section>
+  <div class="tag">02 · Job to Be Done</div>
+  <h2>O corte</h2>
+  <p class="lede">Quatro trabalhos candidatos foram para a mesa. Nenhum foi contratado.</p>
+
+  <p>A pergunta era o que o gestor está contratando o relatório para fazer — orçamento? alerta?
+  munição contra outra área? prova de que a ação funcionou. Cada resposta levaria a um relatório
+  radicalmente diferente.</p>
+
+  <blockquote>
+    A ideia do relatório é ter apenas uma representação visual, apenas isso.
+    <cite>— o corte mais afiado da sessão</cite>
+  </blockquote>
+
+  <p>Técnica encerrada na hora. O escopo do relatório fechou e a energia foi para onde ela
+  realmente estava: o pipeline.</p>
+</section>
+
+<section>
+  <div class="tag">03 · Morphological Analysis</div>
+  <h2>A grade</h2>
+  <p class="lede">Oito parâmetros independentes. A arquitetura inicial era uma célula. Aqui está a grade inteira, com as escolhas em destaque.</p>
+
+  <table class="grid-morf">
+    <thead><tr><th></th><th>Parâmetro</th><th>Opções</th></tr></thead>
+    <tbody>
+      <tr><td>A</td><td>Divisão dos agentes</td><td>
+        <span class="opt pick">por etapa do fluxo</span><span class="sep">·</span><span class="opt">por dimensão</span><span class="sep">·</span><span class="opt">por especialidade</span><span class="sep">·</span><span class="opt">híbrido</span></td></tr>
+      <tr><td>B</td><td>Topologia do grafo</td><td>
+        <span class="opt">linear</span><span class="sep">·</span><span class="opt">fan-out paralelo</span><span class="sep">·</span><span class="opt pick">roteador condicional</span><span class="sep">·</span><span class="opt pick">loop de crítica</span></td></tr>
+      <tr><td>C</td><td>Unidade de trabalho</td><td>
+        <span class="opt">1 reclamação</span><span class="sep">·</span><span class="opt pick">lote de N</span><span class="sep">·</span><span class="opt">base inteira</span></td></tr>
+      <tr><td>D</td><td>Chamadas por reclamação</td><td>
+        <span class="opt">1 call extrai tudo</span><span class="sep">·</span><span class="opt">1 call por dimensão</span><span class="sep">·</span><span class="opt pick">cascata</span></td></tr>
+      <tr><td>E</td><td>Guard-rails</td><td>
+        <span class="opt">só entrada</span><span class="sep">·</span><span class="opt">só saída</span><span class="sep">·</span><span class="opt pick">ambos</span></td></tr>
+      <tr><td>F</td><td>Fora do LLM</td><td>
+        <span class="opt">parse do CSV</span><span class="sep">·</span><span class="opt">contagem</span><span class="sep">·</span><span class="opt pick">ranking</span><span class="sep">·</span><span class="opt">match de catálogo</span></td></tr>
+      <tr><td>G</td><td>Modelo Gemini</td><td>
+        <span class="opt">Flash em tudo</span><span class="sep">·</span><span class="opt">Pro em tudo</span><span class="sep">·</span><span class="opt pick">Flash tria + Pro no risco</span></td></tr>
+      <tr><td>H</td><td>Estado</td><td>
+        <span class="opt">memória do grafo</span><span class="sep">·</span><span class="opt">persistido</span><span class="sep">·</span><span class="opt pick">checkpoint LangGraph</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>O atrito que a grade criou</h3>
+  <p><b>C briga com D.</b> Lote quer atomicidade — vinte entram, vinte saem. Cascata quer
+  granularidade — só a #7 e a #13 sobem para o Pro. Alguém cede.</p>
+  <p>Resolução escolhida: <b>o lote se desfaz na escalada.</b> Flash recebe vinte e devolve vinte com
+  flag; o roteador filtra e monta um lote novo, menor, só com os suspeitos. Nunca chamada individual.</p>
+  <p>O preço: o <code>id</code> da reclamação passa a ter que atravessar o state inteiro com disciplina.
+  Se o modelo devolver dezenove itens para um lote de vinte, o sistema precisa saber qual sumiu.</p>
+</section>
+
+<section>
+  <div class="tag">04 · Os casos</div>
+  <h2>Cinco reclamações derrubam a premissa</h2>
+  <p class="lede">O caso âncora era uma ameaça explícita: <i>"se não for resolvido em X dias vou procurar meus direitos."</i> Depois vieram cinco reclamações realistas, escritas do zero.</p>
+
+  <div class="casos">
+    <div class="caso"><div class="n">1</div>
+      <div><div class="t">TechVibe Eletrônicos</div>
+      <div class="d">Notebook com linha verde na tela. SAC prometeu 5 dias úteis, já se passaram 15.</div></div>
+      <span class="flag fora">fora</span></div>
+
+    <div class="caso"><div class="n">2</div>
+      <div><div class="t">FastDelivery Entregas</div>
+      <div class="d">Rastreio marcado como "entregue ao destinatário". Ninguém recebeu nada. Quem assinou?</div></div>
+      <span class="flag virou">virou fila</span></div>
+
+    <div class="caso"><div class="n">3</div>
+      <div><div class="t">Banco Digital Prime</div>
+      <div class="d">Tarifa de R$ 49,90 numa conta anunciada como isenta. Cliente cita o CDC e pede o dobro.</div></div>
+      <span class="flag fila">fila</span></div>
+
+    <div class="caso"><div class="n">4</div>
+      <div><div class="t">Operadora Conecta Móvel</div>
+      <div class="d">Dois streamings nunca contratados na fatura. Pague tudo ou a linha é bloqueada.</div></div>
+      <span class="flag fila">fila</span></div>
+
+    <div class="caso"><div class="n">5</div>
+      <div><div class="t">Moda Certa Vestuário</div>
+      <div class="d">Devolução recebida há quase um mês. Prazo da própria empresa: 10 dias úteis.</div></div>
+      <span class="flag fora">fora</span></div>
+  </div>
+
+  <h3>O placar que virou o projeto</h3>
+  <div class="placar">
+    <div class="sinal a">
+      <div class="l">Sinal A — ameaça explícita</div>
+      <div class="v">0 / 5</div>
+      <div class="c">O caso âncora. Fácil de detectar, alta precisão, praticamente inexistente no mundo real.</div>
+    </div>
+    <div class="sinal b">
+      <div class="l">Sinal B — exposição factual</div>
+      <div class="v">5 / 5</div>
+      <div class="c">Prazo estourado, cobrança indevida, registro contraditório. Nenhuma ameaça — e o risco todo.</div>
+    </div>
+  </div>
+
+  <p>Um classificador construído em cima do caso âncora acertaria o caso raro e perderia o caro.
+  A #3 é a mais exposta de todas — o cliente cita a lei pelo nome — e não ameaça ninguém.</p>
+</section>
+
+<section>
+  <div class="tag">05 · O critério</div>
+  <h2>Três parcelas, extraídas de um veredito humano</h2>
+  <p class="lede">A ordem da fila veio primeiro. O critério foi extraído depois — e por isso é honesto.</p>
+
+  <ol class="parcelas">
+    <li><b>A empresa está com o dinheiro do cliente.</b> Cobrança indevida pesa mais que dívida pendente.
+    <i>Tirar</i> é diferente de <i>dever</i>.</li>
+    <li><b>O prejuízo cresce sozinho.</b> Tarifa e assinatura se repetem em silêncio todo mês.
+    Um vestido devolvido continua valendo o mesmo vestido para sempre.</li>
+    <li><b>O registro da empresa contradiz o fato.</b> Sistema diz entregue, cliente tem rastreio e
+    diz que não. Prova documental apontando para dentro.</li>
+  </ol>
+
+  <p>A terceira nasceu de uma discordância: a #2 tinha sido deixada de fora, foi contestada, e
+  entrou. Nenhuma das três precisa de LLM para ser <b>julgada</b> — só para ser <b>extraída</b>.
+  Aritmética de prazo é <code>datetime</code>, não Gemini.</p>
+
+  <h3>E o problema que sobrou</h3>
+  <p>Três de cinco viraram prioridade. <b>Sessenta por cento.</b> Uma fila onde a maioria é
+  prioridade não é uma fila — é uma lista com um adjetivo. E é o medo declarado na abertura
+  chegando pela porta dos fundos: não foi o falso positivo que entupiu, foi o critério bom demais.</p>
+  <p>A resposta candidata veio da triagem de pronto-socorro: cinco níveis com cor em vez de binário,
+  cada nível sendo um <i>tempo máximo</i> e não uma posição, e reclassificação automática por espera.
+  Aceita para o v2, ainda não resolvida.</p>
+</section>
+
+<section>
+  <div class="tag">06 · Ship in 60 Minutes → MoSCoW</div>
+  <h2>O que sobrevive à primeira hora</h2>
+  <p class="lede">Uma hora no relógio, Python e uma chave de API. O que entrega, o que corta, o que finge.</p>
+
+  <blockquote>
+    Um batch que lê o CSV e faz as análises com o Gemini via LangGraph. Sem front, sem banco.
+    Gero um HTML com os resultados.
+    <cite>— o v1</cite>
+  </blockquote>
+
+  <p>O LangGraph ficou de pé na hora do aperto — e está certo. Num projeto comercial ele seria peso
+  morto para um fluxo linear; aqui ele é o motivo do projeto. Não se corta o objeto de estudo.</p>
+
+  <div class="moscow">
+    <div class="tier must"><h4>Must · v1</h4><ul>
+      <li>CLI batch: CSV → grafo LangGraph → HTML único</li>
+      <li>Nós divididos por etapa do fluxo</li>
+      <li><b>Contrato de state: <code>id</code> estável + campo de evidência</b></li>
+      <li>Extração de sentimento, produto e sinais — com citação obrigatória</li>
+      <li>Lote de N por chamada</li>
+      <li>Determinístico: parse, agregação, ranking, prazo, score</li>
+    </ul></div>
+
+    <div class="tier should"><h4>Should · v2</h4><ul>
+      <li>Cascata Flash → Pro com sublote de suspeitos</li>
+      <li>Cache com chave <code>hash(texto + prompt + modelo)</code></li>
+      <li>Níveis de criticidade em vez de binário</li>
+    </ul></div>
+
+    <div class="tier could"><h4>Could · v3+</h4><ul>
+      <li>Guard-rails na entrada e na saída</li>
+      <li>Loop de crítica com <code>max_iteracoes</code> e rota de escape</li>
+      <li>Checkpoint do LangGraph · front com upload e polling</li>
+      <li>Reclassificação por tempo de espera</li>
+    </ul></div>
+
+    <div class="tier wont"><h4>Won't · desta vez</h4><ul>
+      <li>Relatório como ferramenta de decisão elaborada</li>
+      <li>Agentes divididos por dimensão ou especialidade</li>
+      <li>Base inteira num prompt só</li>
+      <li>Normalizar CSV com LLM</li>
+    </ul></div>
+  </div>
+</section>
+
+<section>
+  <div class="tag">Síntese</div>
+  <h2>As cinco ligações</h2>
+  <p class="lede">O que só aparece quando a sessão inteira é olhada de uma vez.</p>
+
+  <ol class="conn">
+    <li>
+      <h4>A pergunta da técnica 1 foi respondida pela técnica 3</h4>
+      <p>Na abertura ficou declarado que falso positivo dói mais. Cinco trocas depois, o caso âncora
+      exigiu do sistema uma frase que sustentasse a classificação. Citação obrigatória <i>é</i> a
+      defesa contra falso positivo. Ninguém percebeu na hora.</p>
+    </li>
+    <li>
+      <h4>O corpus matou o próprio caso âncora</h4>
+      <p>Cinco reclamações realistas foram escritas para testar o classificador. Nenhuma tinha ameaça
+      explícita. Zero de cinco — contra cinco de cinco de exposição factual. Ir direto para o código
+      teria produzido um detector do caso raro.</p>
+    </li>
+    <li>
+      <h4>Por isso quase tudo virou backlog sem doer</h4>
+      <p>As três parcelas do score são determinísticas. Uma vez claro que o LLM extrai e o <code>if</code>
+      julga, cascata, cache, guard-rail e loop de crítica deixaram de ser fundação e viraram
+      otimização. Foi o que permitiu o v1 caber em uma hora.</p>
+    </li>
+    <li>
+      <h4>O único problema aberto tem resposta pronta há décadas</h4>
+      <p>Sessenta por cento da amostra virou prioridade. O pronto-socorro resolve isso não com um
+      classificador melhor, mas trocando o binário por níveis com prazo. Vale voltar nisso antes de
+      calibrar o corte do score.</p>
+    </li>
+    <li>
+      <h4>Uma coisa só não é aditiva</h4>
+      <p>Cache, guard-rails, cascata e loop plugam depois sem tocar no que existe. O contrato de state
+      não. Dois campos num <code>TypedDict</code> na primeira hora poupam uma refatoração inteira.</p>
+    </li>
+  </ol>
+</section>
+
+<section>
+  <div class="tag">Encerramento</div>
+  <h2>O que ficou em disco</h2>
+
+  <div class="encerra">
+    <h3>Artefatos</h3>
+    <ul class="files">
+      <li><b>.memlog.md</b> — registro canônico da sessão, entrada por entrada</li>
+      <li><b>brainstorm-intent.md</b> — input limpo para bmad-spec / bmad-prd</li>
+      <li><b>spec-tecnico-v1.md</b> — nós, contrato de state, prompt, score, saída</li>
+      <li><b>tasks-v1.md</b> — 20 tarefas ordenadas por dependência</li>
+      <li><b>brainstorm.html</b> — este documento</li>
+    </ul>
+  </div>
+
+  <h3>Uma ressalva honesta</h3>
+  <p>Os padrões de risco jurídico desta sessão são heurísticas de engenharia, não parecer jurídico.
+  Perfeitamente adequados para um projeto de estudo. Se um dia virarem produção, precisam de alguém
+  com OAB olhando antes.</p>
+</section>
+
+<footer>
+  brainstorm-pipeline-agentes-reclamacoes · 2026-08-06<br>
+  seis técnicas · cinco casos · três critérios · uma premissa derrubada
+</footer>
+
+</div>
+</body>
+</html>

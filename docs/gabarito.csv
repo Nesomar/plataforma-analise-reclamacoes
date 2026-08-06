@@ -1,0 +1,51 @@
+ID_Reclamacao;Empresa;Titulo;Status;fila_prioridade
+RA249827706;MegaEletro;Demora no estorno do cancelamento;Respondida;sim
+RA553035110;Farmácia Saúde Online;Demora no estorno do cancelamento;Não respondida;sim
+RA702632297;MegaEletro;Cobrança indevida no cartão de crédito;Respondida;nao
+RA582334538;Supermercado CompreBem;Voo cancelado sem aviso prévio;Não resolvido;nao
+RA266944844;ModaWeb;Cachorro passou mal com ração;Respondida;nao
+RA507943839;TechPrime Brasil;Voo cancelado sem aviso prévio;Não respondida;nao
+RA966647391;ComidaRápida App;Demora no estorno do cancelamento;Em réplica;sim
+RA184611066;Supermercado CompreBem;Cobrança indevida no cartão de crédito;Em réplica;sim
+RA856528252;ModaWeb;Entregador jogou o pacote por cima do muro;Em réplica;nao
+RA208449460;MegaEletro;Internet caindo toda hora;Resolvido;nao
+RA497478786;ModaWeb;Aplicativo travando e fechando sozinho;Resolvido;sim
+RA283758720;TeleCom Mais;Plano de saúde negou meu exame;Não respondida;sim
+RA507437181;Supermercado CompreBem;Entregador jogou o pacote por cima do muro;Respondida;nao
+RA448195935;PetShop AnimalFeliz;Mau atendimento na loja física;Respondida;nao
+RA709004943;TeleCom Mais;Cobrança indevida no cartão de crédito;Resolvido;sim
+RA592688426;TeleCom Mais;Peça de roupa veio no tamanho errado;Não resolvido;nao
+RA678722458;ModaWeb;Produto veio com defeito e não trocam;Respondida;sim
+RA488690725;Supermercado CompreBem;Mau atendimento na loja física;Em réplica;nao
+RA911514914;Banco DinheiroFácil;Bloqueio de conta sem justificativa;Não resolvido;sim
+RA740389325;Estilo Calçados;Cobrança indevida no cartão de crédito;Respondida;nao
+RA694021782;AéreoBrasil;Internet caindo toda hora;Em réplica;nao
+RA219778234;Farmácia Saúde Online;Produto não entregue e passou do prazo;Em réplica;sim
+RA875340444;AéreoBrasil;Propaganda enganosa na Black Friday;Não resolvido;nao
+RA771410971;Provedor NetVeloz;Mau atendimento na loja física;Em réplica;nao
+RA264109919;Estilo Calçados;Propaganda enganosa na Black Friday;Em réplica;nao
+RA743111853;TechPrime Brasil;Plano de saúde negou meu exame;Em réplica;nao
+RA992994062;SeguroTotal;Peça de roupa veio no tamanho errado;Não respondida;nao
+RA184564737;TeleCom Mais;Propaganda enganosa na Black Friday;Respondida;nao
+RA237859287;Supermercado CompreBem;Internet caindo toda hora;Não respondida;nao
+RA751325257;Provedor NetVeloz;Prometeram brinde e não enviaram;Resolvido;nao
+RA821218382;TeleCom Mais;Mensalidade aumentou sem aviso;Respondida;sim
+RA341266931;SeguroTotal;Plano de saúde negou meu exame;Não resolvido;nao
+RA731832764;ComidaRápida App;Internet caindo toda hora;Em réplica;nao
+RA172370545;MegaEletro;Bloqueio de conta sem justificativa;Não respondida;sim
+RA621209849;Estilo Calçados;Cobrança indevida no cartão de crédito;Não respondida;sim
+RA607526654;Provedor NetVeloz;Voo cancelado sem aviso prévio;Em réplica;nao
+RA201281557;TechPrime Brasil;Bloqueio de conta sem justificativa;Não resolvido;sim
+RA541417711;Farmácia Saúde Online;Demora no estorno do cancelamento;Resolvido;sim
+RA532311310;Estilo Calçados;Estofado rasgou com uma semana de uso;Não respondida;nao
+RA304235259;TechPrime Brasil;Peça de roupa veio no tamanho errado;Respondida;nao
+RA399085574;SeguroTotal;Entregador jogou o pacote por cima do muro;Não resolvido;nao
+RA205128697;TeleCom Mais;Estofado rasgou com uma semana de uso;Não resolvido;nao
+RA278575192;Farmácia Saúde Online;Cobrança indevida no cartão de crédito;Não respondida;sim
+RA276777762;SeguroTotal;Mensalidade aumentou sem aviso;Respondida;nao
+RA406284028;MegaEletro;Aplicativo travando e fechando sozinho;Resolvido;nao
+RA333754555;Supermercado CompreBem;Mensalidade aumentou sem aviso;Não resolvido;nao
+RA611947770;Loja do Lar;Cobrança indevida no cartão de crédito;Não respondida;sim
+RA645276696;PetShop AnimalFeliz;Não consigo cancelar assinatura;Respondida;sim
+RA825003955;Estilo Calçados;Internet caindo toda hora;Não respondida;nao
+RA721609600;AéreoBrasil;Bloqueio de conta sem justificativa;Em réplica;sim
