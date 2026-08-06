@@ -69,7 +69,7 @@ Quatro termos que este documento usa com sentido preciso e que se confundem com 
 
 ### 3.1 Execução e feedback ao operador
 
-- **FR-1** — O sistema aceita o caminho do CSV como argumento de linha de comando e escreve o HTML ao lado do CSV de entrada, com o nome do arquivo de entrada e a data da execução. O caminho final é impresso ao encerrar.
+- **FR-1** — O sistema aceita o caminho do CSV como argumento de linha de comando e escreve o HTML ao lado do CSV de entrada. O nome começa com `relatorio-`, seguido do nome do arquivo de entrada e da data da execução — o prefixo vem primeiro para que o relatório nasça coberto pelo `.gitignore` e não entre no repositório público (DG-2). O caminho final é impresso ao encerrar.
 - **FR-2** — Ao encerrar, o sistema reporta ao operador: total de reclamações lidas, total analisadas com sucesso, total **não analisadas** (ver glossário), e total de sinais derrubados pela verificação de evidência. *(Sem isso o operador não distingue uma execução limpa de uma execução silenciosamente degradada.)*
 - **FR-3** — CSV com coluna ausente, schema divergente ou identificador duplicado é rejeitado antes de qualquer chamada de LLM, com mensagem que nomeia a causa. O formato de origem validado está em `state-contract.md` — separador `;`, codificação UTF-8 com BOM, datas em `DD/MM/AAAA`. Realiza CAP-1.
 - **FR-4** — Se o arquivo de saída já existir, o sistema encerra sem escrever, nomeando o arquivo existente. Sobrescrever exige um sinalizador explícito na linha de comando. *(Relatório é evidência; apagar um em silêncio destrói a comparação entre execuções.)*

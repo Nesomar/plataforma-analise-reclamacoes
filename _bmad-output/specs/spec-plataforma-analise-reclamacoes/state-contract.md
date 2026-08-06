@@ -20,23 +20,46 @@ class Reclamacao(TypedDict):
     status: Literal["Respondida", "Não respondida",
                     "Resolvido", "Não resolvido", "Em réplica"]
 
+class Sinal(TypedDict):
+    codigo: str                                      # catálogo em risk-signals.md
+    citacao: str                                     # literal, piso de 5 palavras
+    valida: bool                                     # default False — não verificado
+                                                     # é indistinguível de reprovado
+
 class Analise(TypedDict):
     id: str                                          # liga de volta — obrigatório
     sentimento: Literal["positivo", "neutro", "negativo"]
     produto: str | None
-    sinal_a: bool
-    sinal_b: list[str]                               # códigos do catálogo em risk-signals.md
-    evidencia: list[str]                             # citações literais
+    sinais: list[Sinal]                              # par indivisível código↔citação
     prazo_prometido_dias: int | None
     data_evento: str | None                          # ISO-8601 ou None
 
+class Falha(TypedDict):
+    ids: list[str]                                   # reclamações que ficaram sem análise
+    causa: str
+    no: str
+
+class Motivo(TypedDict):
+    origem: Literal["sinal", "atributo"]
+    rotulo: str
+    citacao: str | None                              # não-nula sse origem == "sinal"
+
+class Pontuacao(TypedDict):
+    id: str
+    pontos: int
+    na_fila: bool
+    motivos: list[Motivo]                            # o que o relatório exibe
+
 class Estado(TypedDict):
     reclamacoes: list[Reclamacao]
-    analises: Annotated[list[Analise], add]          # acumula entre lotes
-    scores: dict[str, int]                           # id -> score
-    agregados: dict
+    analises: Annotated[list[Analise], add]          # acumula entre execuções de lote
+    falhas: Annotated[list[Falha], add]              # acumula entre execuções de lote
+    pontuacoes: list[Pontuacao]
+    agregados: Agregados                             # TypedDict, nunca dict cru
     caminho_html: str
 ```
+
+> **Revisado em 2026-08-06 pela spine de arquitetura.** `sinal_b: list[str]` + `evidencia: list[str]` eram listas paralelas sem ligação entre si — FR-7 exige derrubar o sinal que a citação falsa sustentava, e com listas paralelas isso é indeterminável. `sinal_a: bool` desapareceu como campo próprio: ameaça explícita é um código do catálogo como qualquer outro, e tratá-la à parte duplicava a regra da evidência. `scores: dict[str, int]` não tinha onde carregar o motivo que FR-12 manda exibir. Ver AD-1, AD-3, AD-4 e AD-5 em `ARCHITECTURE-SPINE.md`.
 
 ## Formato do arquivo de origem
 
@@ -58,7 +81,11 @@ Validado contra `docs/reclamacoes_reclameaqui.csv` em 2026-08-06.
 
 **`evidencia` é campo de primeira classe, não metadado.** Ele atravessa o estado até o relatório e aparece na saída visível ao gestor.
 
-**`analises` acumula.** O redutor `add` permite que lotes sucessivos escrevam no mesmo estado sem sobrescrever.
+**`analises` e `falhas` acumulam.** O redutor `add` permite que execuções paralelas de lote escrevam no mesmo estado sem sobrescrever. A partir da spine, cada lote é uma **execução de nó** despachada por `Send`, não uma iteração dentro de um nó — o redutor deixa de ser decoração e vira a mecânica do merge.
+
+**Conservação.** `len(reclamacoes) == len(analises) + sum(len(f["ids"]) for f in falhas)`, verificado após o gather e antes de `pontuar`. Sem essa asserção, uma reclamação que evapora entre lotes é indistinguível de uma que nunca entrou.
+
+**Zero análises encerra sem escrever.** Falha absorvida não é permissão para produzir relatório sobre nada. Ver AD-13.
 
 ## Ponto de extensão
 
