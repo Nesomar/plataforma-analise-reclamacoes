@@ -4,21 +4,22 @@ Companion de `SPEC.md`. Sustenta CAP-9.
 
 ## Grafo do v1
 
-Divisão dos nós **por etapa do fluxo**. Linear; o roteamento condicional entra junto com a cascata, em `roadmap.md`.
+Divisão dos nós **por etapa do fluxo**, com um fan-out por lote no meio. O roteamento condicional entra junto com a cascata, em `roadmap.md`.
 
 ```mermaid
 flowchart LR
-    A[carregar] --> B[analisar_lotes]
-    B --> C[pontuar]
+    A[carregar] -->|Send por lote| B1[analisar_lote]
+    A -->|Send por lote| B2[analisar_lote]
+    A -->|Send por lote| Bn[analisar_lote ...]
+    B1 --> G((gather))
+    B2 --> G
+    Bn --> G
+    G --> C[pontuar]
     C --> D[agregar]
     D --> E[renderizar]
-
-    A -.->|determinístico| A
-    B -.->|LLM| B
-    C -.->|determinístico| C
-    D -.->|determinístico| D
-    E -.->|determinístico| E
 ```
+
+> **Revisado em 2026-08-06 pela spine.** O grafo era linear, com um nó `analisar_lotes` que iteraria os lotes por dentro. Nessa forma, repetição no nível do nó re-executaria todos os lotes — inclusive os que já haviam voltado corretos —, queimando token contra o teto de custo de NFR-3. Cada lote virou uma execução de nó; a `RetryPolicy` cobre cada uma isoladamente e a concorrência tem padrão 1. Ver AD-8 e AD-9.
 
 | Nó | Tipo | Responsabilidade |
 |---|---|---|

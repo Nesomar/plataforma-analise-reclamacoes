@@ -1,0 +1,427 @@
+<title>Arquitetura — Plataforma de Análise de Reclamações</title>
+
+<style>
+  :root {
+    --papel: #E9EDF0;
+    --papel-alto: #F4F6F8;
+    --tinta: #1B2228;
+    --tinta-fraca: #5A6773;
+    --tinta-tenue: #8D99A4;
+    --linha: #C9D2D9;
+    --acento: #2E5C7E;
+    --acento-fraco: #E0E8EF;
+    --derrubado: #8C3A3A;
+    --verificado: #4A6B4E;
+
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --papel: #12171C;
+      --papel-alto: #1A2027;
+      --tinta: #DDE4EA;
+      --tinta-fraca: #93A1AD;
+      --tinta-tenue: #667581;
+      --linha: #2C3640;
+      --acento: #7FB0D4;
+      --acento-fraco: #1D2A35;
+      --derrubado: #D08C8C;
+      --verificado: #93B897;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --papel: #12171C;
+    --papel-alto: #1A2027;
+    --tinta: #DDE4EA;
+    --tinta-fraca: #93A1AD;
+    --tinta-tenue: #667581;
+    --linha: #2C3640;
+    --acento: #7FB0D4;
+    --acento-fraco: #1D2A35;
+    --derrubado: #D08C8C;
+    --verificado: #93B897;
+  }
+
+  :root[data-theme="light"] {
+    --papel: #E9EDF0;
+    --papel-alto: #F4F6F8;
+    --tinta: #1B2228;
+    --tinta-fraca: #5A6773;
+    --tinta-tenue: #8D99A4;
+    --linha: #C9D2D9;
+    --acento: #2E5C7E;
+    --acento-fraco: #E0E8EF;
+    --derrubado: #8C3A3A;
+    --verificado: #4A6B4E;
+  }
+
+  body {
+    background: var(--papel);
+    color: var(--tinta);
+    font-family: var(--sans);
+    font-size: 16.5px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .folha {
+    max-width: 74rem;
+    margin: 0 auto;
+    padding: clamp(2rem, 5vw, 5rem) clamp(1.1rem, 4vw, 3rem) 6rem;
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 42rem);
+    column-gap: 2.5rem;
+    justify-content: start;
+  }
+
+  .folha > * { grid-column: 2; }
+
+  /* marginália: os IDs de AD, que são estáveis e citados a jusante */
+  .nota {
+    grid-column: 1;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: var(--tinta-tenue);
+    text-align: right;
+    padding-top: 0.5rem;
+    align-self: start;
+  }
+  .nota b { display: block; color: var(--acento); font-weight: 700; }
+
+  .largo {
+    grid-column: 1 / -1;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  h1, h2, h3 { font-family: var(--serif); text-wrap: balance; line-height: 1.18; font-weight: 600; }
+
+  h1 { font-size: clamp(2.1rem, 5.5vw, 3.2rem); letter-spacing: -0.015em; margin-bottom: 0.6rem; }
+  h2 {
+    font-size: clamp(1.5rem, 3.2vw, 2rem);
+    margin-top: 4.5rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--linha);
+  }
+  h3 { font-size: 1.14rem; margin-top: 2.4rem; }
+
+  p, ul, ol { margin-top: 1rem; }
+  ul, ol { padding-left: 1.15rem; }
+  li { margin-top: 0.4rem; }
+
+  .sobrelinha {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--acento);
+    margin-bottom: 0.9rem;
+  }
+
+  .tese {
+    font-family: var(--serif);
+    font-size: clamp(1.15rem, 2.4vw, 1.42rem);
+    line-height: 1.45;
+    color: var(--tinta-fraca);
+    margin-top: 1.2rem;
+    max-width: 34rem;
+  }
+
+  .meta {
+    margin-top: 2.6rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--linha);
+    font-family: var(--mono);
+    font-size: 0.74rem;
+    color: var(--tinta-tenue);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.8rem;
+  }
+
+  code, .mono { font-family: var(--mono); font-size: 0.86em; }
+  code { background: var(--acento-fraco); padding: 0.1em 0.34em; border-radius: 2px; }
+
+  pre {
+    background: var(--papel-alto);
+    border: 1px solid var(--linha);
+    padding: 1.1rem 1.3rem;
+    overflow-x: auto;
+    margin-top: 1.2rem;
+    font-size: 0.82rem;
+    line-height: 1.6;
+  }
+  pre code { background: none; padding: 0; font-size: 1em; }
+
+  /* o dispositivo central: uma afirmação e a citação que a sustenta */
+  .prova {
+    margin-top: 1.6rem;
+    background: var(--papel-alto);
+    border: 1px solid var(--linha);
+    padding: 1.15rem 1.3rem;
+  }
+  .prova .alegacao { font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.03em; }
+  .prova .citacao {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    font-style: italic;
+    margin-top: 0.55rem;
+    padding-left: 0.9rem;
+    border-left: 2px solid var(--verificado);
+    color: var(--tinta);
+  }
+  .prova .veredito { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 0.7rem; color: var(--verificado); }
+
+  .prova.morta .citacao { border-left-color: var(--derrubado); color: var(--tinta-tenue); text-decoration: line-through; text-decoration-thickness: 1px; }
+  .prova.morta .veredito { color: var(--derrubado); }
+
+  table { border-collapse: collapse; width: 100%; margin-top: 1.3rem; font-size: 0.88rem; }
+  th, td { text-align: left; padding: 0.62rem 0.9rem; border-bottom: 1px solid var(--linha); vertical-align: top; }
+  th {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--tinta-tenue);
+    border-bottom-color: var(--tinta-tenue);
+  }
+  td.num { font-variant-numeric: tabular-nums; font-family: var(--mono); }
+
+  .regra { margin-top: 2rem; }
+  .regra .titulo { font-family: var(--serif); font-size: 1.12rem; font-weight: 600; }
+  .regra .impede {
+    margin-top: 0.5rem;
+    font-size: 0.93rem;
+    color: var(--tinta-fraca);
+    padding-left: 0.9rem;
+    border-left: 2px solid var(--linha);
+  }
+  .regra .impede b { color: var(--tinta); font-weight: 600; }
+
+  figure { margin-top: 1.8rem; }
+  figcaption { font-size: 0.82rem; color: var(--tinta-fraca); margin-top: 0.8rem; max-width: 42rem; }
+  svg { display: block; max-width: 100%; height: auto; }
+  .svg-texto { font-family: var(--mono); font-size: 11px; fill: var(--tinta); }
+  .svg-rotulo { font-family: var(--mono); font-size: 9px; fill: var(--tinta-tenue); letter-spacing: 0.08em; }
+  .svg-caixa { fill: var(--papel-alto); stroke: var(--linha); stroke-width: 1.5; }
+  .svg-caixa-impura { fill: var(--acento-fraco); stroke: var(--acento); stroke-width: 1.5; }
+  .svg-seta { stroke: var(--tinta-tenue); stroke-width: 1.5; fill: none; }
+
+  a { color: var(--acento); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible, :focus-visible { outline: 2px solid var(--acento); outline-offset: 3px; }
+
+  @media (max-width: 62rem) {
+    .folha { grid-template-columns: minmax(0, 1fr); }
+    .folha > * { grid-column: 1; }
+    .nota { grid-column: 1; text-align: left; padding-top: 1.6rem; }
+    .nota b { display: inline; margin-right: 0.5rem; }
+  }
+</style>
+
+<div class="folha">
+
+  <header>
+    <p class="sobrelinha">Arquitetura · v1 · 2026-08-06</p>
+    <h1>Nenhuma afirmação sobrevive sem a frase que a sustenta</h1>
+    <p class="tese">Um pipeline que lê reclamações de consumidor e devolve uma fila de prioridade. A regra que organiza tudo o resto: se o modelo marca um risco, ele precisa citar o trecho literal que o prova — e o código verifica a citação sem perguntar ao modelo.</p>
+    <div class="meta">
+      <span>22 invariantes</span>
+      <span>Python · LangGraph 1.2.10 · Gemini</span>
+      <span>50 reclamações sintéticas</span>
+    </div>
+  </header>
+
+  <h2>O problema, exatamente</h2>
+
+  <p>Uma base de reclamações em texto livre é ilegível em escala. A fila de atendimento acaba ordenada por data de chegada, o que trata igualmente uma dúvida de tamanho de vestido e uma cobrança indevida recorrente.</p>
+
+  <p>A tentação óbvia é pedir ao modelo que classifique e confiar. Isso falha de um jeito específico: reclamação de consumidor é cheia de indignação retórica — <i>“é uma fraude”</i>, <i>“é um absurdo”</i>, <i>“isso é um crime”</i> — que um classificador ingênuo lê como risco jurídico. Numa base de 50 reclamações reais, a varredura por <code>processo</code>, <code>advogado</code>, <code>Procon</code>, <code>juizado</code> e <code>Código de Defesa do Consumidor</code> retornou <b>zero ocorrências</b>. O que existe é só retórica.</p>
+
+  <p class="sobrelinha" style="margin-top:2.5rem">A defesa</p>
+
+  <div class="prova">
+    <div class="alegacao">sinal: cobranca_indevida</div>
+    <div class="citacao">“fui cobrado de uma taxa que eu nunca contratei”</div>
+    <div class="veredito">É substring do texto original · sinal mantido</div>
+  </div>
+
+  <div class="prova morta">
+    <div class="alegacao">sinal: cobranca_indevida</div>
+    <div class="citacao">“o cliente afirma ter sido cobrado indevidamente”</div>
+    <div class="veredito">Paráfrase do modelo, não existe no texto · sinal derrubado</div>
+  </div>
+
+  <p>A verificação é comparação de string, não julgamento. O modelo não é confiável para auditar a si mesmo; <code>in</code> é.</p>
+
+  <h2>A forma</h2>
+
+  <figure class="largo">
+    <svg viewBox="0 0 760 240" role="img" aria-label="Grafo do pipeline: carregar despacha um Send por lote para três execuções de analisar_lote, que convergem num gather e seguem para pontuar, agregar e renderizar.">
+      <defs>
+        <marker id="ponta" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0,0 L8,4 L0,8 z" fill="currentColor" style="color: var(--tinta-tenue)"/>
+        </marker>
+      </defs>
+
+      <rect class="svg-caixa" x="8" y="98" width="96" height="44" rx="2"/>
+      <text class="svg-texto" x="56" y="125" text-anchor="middle">carregar</text>
+
+      <path class="svg-seta" d="M104 112 L 176 46" marker-end="url(#ponta)"/>
+      <path class="svg-seta" d="M104 120 L 176 120" marker-end="url(#ponta)"/>
+      <path class="svg-seta" d="M104 128 L 176 194" marker-end="url(#ponta)"/>
+      <text class="svg-rotulo" x="140" y="72" text-anchor="middle">SEND</text>
+
+      <rect class="svg-caixa-impura" x="180" y="24" width="132" height="44" rx="2"/>
+      <text class="svg-texto" x="246" y="51" text-anchor="middle">analisar_lote</text>
+      <rect class="svg-caixa-impura" x="180" y="98" width="132" height="44" rx="2"/>
+      <text class="svg-texto" x="246" y="125" text-anchor="middle">analisar_lote</text>
+      <rect class="svg-caixa-impura" x="180" y="172" width="132" height="44" rx="2"/>
+      <text class="svg-texto" x="246" y="199" text-anchor="middle">analisar_lote</text>
+      <text class="svg-rotulo" x="246" y="16" text-anchor="middle">ÚNICO FILTRO IMPURO — TOCA A REDE</text>
+
+      <path class="svg-seta" d="M312 46 L 372 112" marker-end="url(#ponta)"/>
+      <path class="svg-seta" d="M312 120 L 372 120" marker-end="url(#ponta)"/>
+      <path class="svg-seta" d="M312 194 L 372 128" marker-end="url(#ponta)"/>
+
+      <circle class="svg-caixa" cx="392" cy="120" r="20"/>
+      <text class="svg-rotulo" x="392" y="123" text-anchor="middle">ADD</text>
+
+      <path class="svg-seta" d="M412 120 L 448 120" marker-end="url(#ponta)"/>
+      <rect class="svg-caixa" x="452" y="98" width="88" height="44" rx="2"/>
+      <text class="svg-texto" x="496" y="125" text-anchor="middle">pontuar</text>
+
+      <path class="svg-seta" d="M540 120 L 572 120" marker-end="url(#ponta)"/>
+      <rect class="svg-caixa" x="576" y="98" width="84" height="44" rx="2"/>
+      <text class="svg-texto" x="618" y="125" text-anchor="middle">agregar</text>
+
+      <path class="svg-seta" d="M660 120 L 690 120" marker-end="url(#ponta)"/>
+      <rect class="svg-caixa" x="694" y="98" width="58" height="44" rx="2"/>
+      <text class="svg-texto" x="723" y="119" text-anchor="middle">rende-</text>
+      <text class="svg-texto" x="723" y="133" text-anchor="middle">rizar</text>
+    </svg>
+    <figcaption>Cada lote é uma <b>execução de nó</b>, não uma iteração dentro de um nó. A diferença aparece na falha: com um nó só, repetir custaria re-analisar os lotes que já tinham voltado corretos — e o teto de custo do projeto é o tier gratuito da API.</figcaption>
+  </figure>
+
+  <div class="nota"><b>AD-7</b>fronteira impura</div>
+  <div class="regra">
+    <div class="titulo">Um único filtro toca a rede</div>
+    <div class="impede">Apenas <code>analise.py</code> importa o SDK do modelo, e o cliente é construído dentro da função, nunca em escopo de módulo. <b>Impede</b> que a lógica de julgamento fique acoplada à rede — o que tornaria nominal a separação entre “o modelo extrai” e “o código julga”. Verificável por inspeção de import.</div>
+  </div>
+
+  <div class="nota"><b>AD-16</b>payload</div>
+  <div class="regra">
+    <div class="titulo">Só <code>id</code> e <code>texto</code> atravessam a fronteira</div>
+    <div class="impede">A empresa fica fora porque nesta base empresa e reclamação estão pareadas ao acaso — um supermercado recebe reclamação de voo cancelado, e derivar produto da empresa produz ranking falso. O título fica fora por um motivo mais duro: <b>o título é o gabarito.</b> A regra determinística classifica por match exato de título, então mandá-lo ao modelo faria o LLM reproduzir a linha de base e esvaziaria a métrica de aceitação. O que não é enviado não pode ser inferido — a defesa é a construção do payload, não uma instrução no prompt.</div>
+  </div>
+
+  <div class="nota"><b>AD-2</b>evidência</div>
+  <div class="regra">
+    <div class="titulo">Uma citação falsa derruba o código inteiro</div>
+    <div class="impede">Não só aquele par. Se o modelo apresentou duas citações para o mesmo sinal e uma é fabricada, o sinal cai — inclusive pela citação que passou. <b>Impede</b> confiar na metade que não foi pega, num produto cuja economia declarada é que falso positivo custa mais que falso negativo.</div>
+  </div>
+
+  <div class="nota"><b>AD-6</b>conservação</div>
+  <div class="regra">
+    <div class="titulo">Nenhuma reclamação evapora</div>
+    <div class="impede"><code>len(reclamacoes) == len(analises) + Σ ids em falhas</code>, verificado por asserção após o gather. <b>Impede</b> que uma reclamação perdida entre lotes seja indistinguível de uma que nunca entrou.</div>
+  </div>
+
+  <div class="nota"><b>AD-13</b>aborto</div>
+  <div class="regra">
+    <div class="titulo">Relatório sobre nada não é relatório</div>
+    <div class="impede">Zero análises encerra sem escrever arquivo. E há uma segunda condição que o contador de análises não pega: se o modelo propôs sinais e <b>100% deles foram derrubados</b>, o relatório sai marcado como degradado. Cinquenta análises com todas as citações fabricadas produziriam contagem cheia, zero falhas, e um documento de aparência impecável sobre um modelo completamente quebrado.</div>
+  </div>
+
+  <h2>O contrato de estado</h2>
+
+  <p>É a única parte do desenho que não é aditiva. Errar aqui converte cache, cascata e checkpoint de plugin em reescrita.</p>
+
+  <pre class="largo"><code>class Sinal(TypedDict):
+    codigo: str      # do catálogo de risco
+    citacao: str     # literal, piso de cinco palavras
+    valida: bool     # default False — não verificado é
+                     # indistinguível de reprovado
+
+class Falha(TypedDict):
+    ids: list[str]   # reclamações que ficaram sem análise
+    causa: str
+    no: str
+
+class Estado(TypedDict):
+    reclamacoes: list[Reclamacao]
+    analises: Annotated[list[Analise], add]
+    falhas:   Annotated[list[Falha], add]
+    pontuacoes: list[Pontuacao]
+    agregados:  Agregados
+    caminho_html: str</code></pre>
+
+  <p>O desenho anterior tinha <code>sinal_b: list[str]</code> e <code>evidencia: list[str]</code> — duas listas paralelas, sem nada ligando a citação ao sinal. Quando a verificação descobrisse que a segunda citação era inventada, não haveria como saber qual sinal ela sustentava. A regra “derruba o sinal específico” era <b>inexpressável no contrato</b>. Foi o primeiro furo que esta arquitetura fechou.</p>
+
+  <h2>O que a medição mostrou, incluindo o que não favorece</h2>
+
+  <p>Antes de construir o pipeline, uma linha de base determinística de seis strings foi escrita para dar uma barra concreta. O classificador com LLM foi medido contra ela na mesma base.</p>
+
+  <table class="largo">
+    <thead>
+      <tr><th>Regra</th><th>Precisão</th><th>Recall</th><th>Atende o critério</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Categoria de dinheiro retido</td><td class="num">88,9%</td><td class="num">84,2%</td><td>não — precisão</td></tr>
+      <tr><td>Categoria + <code>Status</code> ≠ Respondida</td><td class="num">100%</td><td class="num">68,4%</td><td>sim</td></tr>
+      <tr><td>Gemini, vendo apenas o texto livre</td><td class="num">88,9%</td><td class="num">84,2%</td><td>não — precisão</td></tr>
+    </tbody>
+  </table>
+
+  <p><b>O LLM empata com a regra determinística.</b> Zero divergências nas 50 reclamações — não é empate estatístico, as duas abordagens tomam a mesma decisão em cada linha.</p>
+
+  <p>Duas leituras, ambas verdadeiras. O LLM se validou: reconstruiu a categorização inteira lendo só o texto livre, sem nunca ver o título canônico que a regra consome de graça — numa base sem títulos padronizados, a regra não existiria. E o LLM não se paga aqui: reproduzir um <code>set</code> de seis strings é custo sem retorno.</p>
+
+  <h3>O que esta base não exercita</h3>
+
+  <p>Registrado porque um requisito atendido sobre dado degenerado não está atendido:</p>
+
+  <ul>
+    <li><b>Sentimento é constante.</b> Negativo em 50 de 50. A leitura de percepção de marca é produzida e informativamente vazia — uma base de reclamações não contém clientes satisfeitos.</li>
+    <li><b>O ranking de produtos é raso.</b> 18 das 50 identificações caem em <code>fatura</code>, <code>compra</code>, <code>produto</code>, <code>serviço</code>. O ranking ordena palavras, não produtos.</li>
+    <li><b>Três das cinco parcelas de risco não aparecem.</b> Ameaça explícita: 0 de 50. Elas permanecem no código com um caso de teste construído à mão para cada — o teste prova que o caminho executa, não que a heurística acerta.</li>
+  </ul>
+
+  <p>Das três leituras que o produto promete, apenas a fila de prioridade é exercida por esta base.</p>
+
+  <h2>Como a arquitetura foi verificada</h2>
+
+  <p>A spine passou por reconciliação contra os documentos que a dirigiram e por três revisores independentes. O placar importa menos que a convergência:</p>
+
+  <table class="largo">
+    <thead><tr><th>Achado crítico</th><th>Consequência se tivesse passado</th></tr></thead>
+    <tbody>
+      <tr><td>Título no payload do modelo</td><td>O LLM receberia o gabarito da linha de base; a métrica de aceitação deixaria de significar qualquer coisa. <b>Três revisores acharam este furo de forma independente.</b></td></tr>
+      <tr><td><code>select_autoescape(["html"])</code></td><td>O seletor casa por extensão e o template termina em <code>.j2</code>: a linha que <i>parece</i> a defesa deixaria o autoescape desligado, e a primeira citação com <code>&lt;</code> quebraria o relatório.</td></tr>
+      <tr><td><code>RetryPolicy</code> sem <code>error_handler</code></td><td>Repetição esgotada propagaria a exceção e abortaria o grafo — cinco regras dependiam de um caminho de execução que não existia.</td></tr>
+    </tbody>
+  </table>
+
+  <p>Um revisor adversarial recebeu uma tarefa específica: construir duas unidades que obedecessem todos os invariantes ao pé da letra e ainda assim se construíssem incompatíveis. Encontrou doze pares. Quatro invariantes novos saíram dali — entre eles o que fixa <b>um único escritor por chave de estado</b>, depois de mostrar que <code>na_fila</code> podia razoavelmente pertencer a dois nós diferentes, e que com os dois escrevendo a fila renderizaria vazia sem erro nenhum.</p>
+
+  <h2>Onde tudo isto vive</h2>
+
+  <table class="largo">
+    <thead><tr><th>Documento</th><th>Carrega</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">SPEC.md</td><td>Capacidades, restrições, não-objetivos</td></tr>
+      <tr><td class="mono">risk-signals.md</td><td>O catálogo de sinais e a calibragem contra o gabarito humano</td></tr>
+      <tr><td class="mono">state-contract.md</td><td>O contrato de estado acima, e por que ele mudou</td></tr>
+      <tr><td class="mono">prd.md</td><td>Usuários, métricas e contramétricas, governança de dados, comportamento em falha</td></tr>
+      <tr><td class="mono">ARCHITECTURE-SPINE.md</td><td>Os 22 invariantes, cada um com o que vincula e a divergência que impede</td></tr>
+      <tr><td class="mono">.memlog.md</td><td>Toda decisão, com a razão — inclusive as descartadas</td></tr>
+    </tbody>
+  </table>
+
+  <p class="tese" style="margin-top:3rem">A spine fixa apenas o que duas pessoas construindo em paralelo poderiam escolher de formas incompatíveis. Tudo o mais é do código, assim que ele existir.</p>
+
+</div>
