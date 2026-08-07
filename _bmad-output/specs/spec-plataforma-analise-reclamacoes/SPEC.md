@@ -37,7 +37,7 @@ O sistema transforma essa base em três leituras acionáveis para gestores: uma 
 
 - **CAP-4 — Sinais de risco jurídico**
   - **intent:** O sistema detecta dois tipos independentes de sinal — intenção declarada de acionar a empresa, e exposição factual sem ameaça — e devolve, para cada sinal, a frase literal do texto que o sustenta.
-  - **success:** Nenhum sinal é marcado sem citação associada; os cinco tipos de exposição factual do catálogo são reconhecidos sobre o corpus de referência. Ver `risk-signals.md`.
+  - **success:** Nenhum sinal é marcado sem citação associada; os códigos do catálogo são reconhecidos sobre o corpus de referência. O catálogo é fonte única e vive em `risk-signals.md` — quatro códigos de exposição factual e dois de intenção jurídica declarada, revisados em 2026-08-07.
 
 - **CAP-5 — Verificação de evidência**
   - **intent:** O sistema confirma, sem consultar o modelo, que cada citação devolvida existe de fato no texto original da reclamação, e derruba a classificação quando não existe.

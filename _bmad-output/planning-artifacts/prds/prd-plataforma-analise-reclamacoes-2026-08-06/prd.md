@@ -62,7 +62,7 @@ Quatro termos que este documento usa com sentido preciso e que se confundem com 
 
 | Termo | Sentido exato |
 |---|---|
-| **sinal** | Um item do catálogo de risco (`cobranca_indevida`, `prazo_estourado`, …) marcado como presente numa reclamação. Ver `risk-signals.md` |
+| **sinal** | Um item do catálogo de risco (`dinheiro_retido`, `prazo_estourado`, …) marcado como presente numa reclamação. Ver `risk-signals.md` |
 | **citação** | Trecho literal do texto da reclamação. É o dado bruto |
 | **evidência** | A citação **associada ao sinal que ela sustenta**. Citação solta não é evidência, e é por isso que FR-7 derruba um sinal e não a reclamação inteira |
 | **não analisada** | Reclamação que entrou na execução e não saiu com classificação, por qualquer causa. É o mesmo conjunto que FR-2 chama de falha, que NFR-5 manda absorver e que CM-4 conta — este documento usa **não analisada** em todos os três |

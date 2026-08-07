@@ -15,17 +15,41 @@ A varredura da base real por `processo`, `advogado`, `Procon`, `direitos`, `juiz
 
 A descoberta da sessão de brainstorming se confirma em escala dez vezes maior: **um detector de ameaça explícita não encontraria nada nesta base.**
 
-## Catálogo do sinal B
+## Catálogo de códigos
+
+**Revisado em 2026-08-07.** A versão anterior listava cinco códigos de sinal B — `cobranca_indevida`, `prazo_estourado`, `registro_contraditorio`, `servico_nao_contratado`, `lei_citada` — e mantinha as parcelas do score numa tabela separada, sem mapeamento entre as duas. A revisão fecha essa lacuna: **cada parcela do score é agora exatamente um código do catálogo, ou um grupo nomeado de códigos.** O motivo está registrado abaixo, em *Por que o catálogo mudou*.
+
+### Sinal A — intenção jurídica declarada
+
+Grupo **saturado**: a presença de um ou dos dois códigos vale 3 pontos, **uma única vez**. Os dois nomeiam a mesma coisa — o cliente anunciando que vai acionar seus direitos — e somá-los duplicaria uma parcela só.
 
 | Código | Descrição |
 |---|---|
-| `cobranca_indevida` | Valor debitado sem contratação, sem notificação prévia, ou contra o que foi prometido na oferta |
-| `prazo_estourado` | Prazo legal ou prometido pela própria empresa já vencido |
-| `registro_contraditorio` | Registro da empresa afirma um fato que o cliente contesta apresentando protocolo ou rastreio |
-| `servico_nao_contratado` | Item na fatura que o cliente nega ter solicitado |
+| `ameaca_explicita` | Cliente anuncia que vai acionar seus direitos. Ex.: *"se não for resolvido em X dias vou procurar meus direitos"* |
 | `lei_citada` | Cliente invoca norma de defesa do consumidor, artigo específico, ou pede ressarcimento em dobro |
 
-### Candidato: `Status` como sinal determinístico
+### Sinal B — exposição factual
+
+| Código | Descrição |
+|---|---|
+| `dinheiro_retido` | **A empresa está com dinheiro do cliente.** Cobre as seis categorias que o gabarito marcou: estorno de cancelamento não feito, conta bloqueada sem justificativa, produto pago e não entregue, produto defeituoso que a empresa não troca nem devolve, assinatura que segue sendo cobrada após pedido de cancelamento, e valor debitado sem contratação ou contra a oferta |
+| `registro_contraditorio` | Registro da empresa afirma um fato que o cliente contesta apresentando protocolo ou rastreio |
+| `dano_continuado` | O prejuízo segue ocorrendo enquanto o caso não é resolvido — cobrança que se repete a cada ciclo, serviço pago e indisponível de forma contínua |
+| `prazo_estourado` | Prazo legal ou prometido pela própria empresa já vencido |
+
+**Seis códigos no total.** Nenhum outro. A lista canônica de termos genéricos de produto vive no mesmo módulo (`catalogo.py`), ao lado deste catálogo — ver CM-3 no PRD.
+
+### Por que o catálogo mudou
+
+Três defeitos, encontrados na auditoria de prontidão de implementação em 2026-08-06 e corrigidos aqui:
+
+1. **O catálogo não cobria a parcela validada.** A dimensão que explica 16 das 19 marcações do gabarito — *a empresa está com dinheiro do cliente* — se distribui por **seis** categorias. O catálogo antigo tinha código para duas (`cobranca_indevida`, `servico_nao_contratado`). Um `pontuar` que só enxerga códigos do catálogo perderia as outras quatro, e o recall cairia muito abaixo do piso de 65% que M-1 exige. `dinheiro_retido` é a parcela validada virando código, com o mesmo escopo que a medição usou.
+2. **Somar dois códigos de dinheiro quebrava o modificador em silêncio.** `cobranca_indevida` (3) e `servico_nao_contratado` (3) marcados juntos somam 6; o modificador `Status = Respondida` (−1) deixa 5, ainda acima do corte de 3. Os dois únicos falsos positivos da regra base são exatamente cobranças indevidas com `Status = Respondida` — o mecanismo que dá precisão de 100% deixaria de operar sem que nada falhasse visivelmente. Com um código único para dinheiro retido, não há o que somar.
+3. **`lei_citada` não tinha peso em lugar nenhum.** Não correspondia a nenhuma parcela da tabela de pesos. Passa a ser sinal A, com o peso da parcela *ameaça explícita*, saturado junto com ela.
+
+Consequência conhecida e aceita: `registro_contraditorio` (2) mais `prazo_estourado` (1) somam exatamente 3 e entram na fila sem dinheiro retido. Nesta base o efeito é nulo — não há caso limpo de registro contraditório —, então M-1 medido não se altera. Numa base real é uma combinação plausível e é intencional que ela qualifique.
+
+### `Status` como modificador determinístico
 
 A base traz uma coluna `Status` que o desenho original não previu:
 
@@ -39,7 +63,7 @@ A base traz uma coluna `Status` que o desenho original não previu:
 
 `Não respondida` e `Não resolvido` são exposição factual pura, já estruturada, **de graça e sem LLM** — a empresa nem respondeu, ou respondeu e não resolveu. Vinte das cinquenta linhas. É o sinal mais barato disponível no projeto inteiro.
 
-Não foi adotado como parcela porque o peso frente às três existentes é decisão em aberto — ver Open Questions em `SPEC.md`.
+**Resolvido (Q-6 do PRD).** Não vira parcela independente — sozinho tem F1 0,41, pior que a categoria. Entra como **modificador negativo de −1** quando `Status = Respondida`, dentro da categoria certa. É o que elimina os dois únicos falsos positivos da regra base. `Status` é atributo do CSV, não código do catálogo: produz `Motivo` com `origem = "atributo"` e citação nula (AD-3).
 
 ### Glossário no prompt
 
@@ -107,16 +131,31 @@ Todos os números abaixo são contra o gabarito v2, recalculados em 2026-08-06. 
 
 ### Pesos do v1
 
-| Parcela | Peso | Situação |
-|---|---|---|
-| Dinheiro do cliente retido | 3 | **Validada.** Único sinal que explica o gabarito |
-| `Status` = Respondida | −1 | Modificador negativo, elimina os falsos positivos observados |
-| Ameaça explícita (sinal A) | 3 | **Não exercida** — 0 de 50 nesta base |
-| Dano continuado | 2 | **Não sustentada** — *mensalidade aumentou sem aviso* teve apenas 1 de 3 |
-| Registro contraditório | 2 | **Não exercida** — nenhum caso limpo nesta base |
-| Prazo estourado | 1 | **Fraca** — a base não traz data de evento |
+**Ratificado em 2026-08-07.** Esta é a tabela canônica: `pontuacao.py` a declara em um lugar só, com o código do catálogo como chave. Cada linha é um código do catálogo ou um atributo do CSV — não há parcela sem código correspondente, nem código sem peso.
+
+| Código / atributo | Peso | Soma? | Situação |
+|---|---|---|---|
+| `dinheiro_retido` | 3 | — | **Validada.** Único sinal que explica o gabarito — 16 de 19 marcações |
+| `ameaca_explicita` | 3 | grupo A, satura | **Não exercida** — 0 de 50 nesta base |
+| `lei_citada` | 3 | grupo A, satura | **Não exercida** — 0 de 50 nesta base |
+| `registro_contraditorio` | 2 | — | **Não exercida** — nenhum caso limpo nesta base |
+| `dano_continuado` | 2 | — | **Não sustentada** — *mensalidade aumentou sem aviso* teve apenas 1 de 3 |
+| `prazo_estourado` | 1 | — | **Fraca** — a base não traz data de evento |
+| `Status` = Respondida | −1 | modificador | **Validada.** Elimina os dois falsos positivos observados |
+
+**Grupo A satura:** `ameaca_explicita` e `lei_citada` juntos valem 3, nunca 6. Todos os demais códigos somam normalmente.
 
 Corte binário, a partir de 3 pontos. As parcelas não exercidas permanecem no código com peso baixo: elas existem para a base real, não para esta.
+
+**Conferência contra a regra medida** — a pontuação reproduz, nesta base, a regra que atinge precisão de 100%:
+
+| Situação | Cálculo | Fila | Confere com |
+|---|---|---|---|
+| Dinheiro retido, `Status` ≠ Respondida | 3 | entra | Regra adotada, 13 TP |
+| Dinheiro retido, `Status` = Respondida | 3 − 1 = 2 | fora | Os 2 FP que a regra base cometia |
+| Só prazo estourado | 1 | fora | TechVibe e Moda Certa, fora do gabarito do corpus de 5 |
+| Só registro contraditório | 2 | fora | — |
+| Registro contraditório + prazo estourado | 3 | entra | Consequência aceita; nula nesta base |
 
 > **Honestidade sobre o resultado.** Nesta base, um classificador de uma parcela só atinge F1 0.86. As outras quatro parcelas não são testáveis com os dados disponíveis, e mantê-las é uma aposta na variedade de uma base real — não uma conclusão apoiada em evidência.
 

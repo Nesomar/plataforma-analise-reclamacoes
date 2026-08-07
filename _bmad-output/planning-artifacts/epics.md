@@ -27,6 +27,7 @@ Não há documento de UX: o produto entrega um arquivo HTML estático e a spine 
 **Execução e feedback ao operador**
 
 - **FR-1** — O sistema aceita o caminho do CSV como argumento de linha de comando e escreve o HTML ao lado do CSV de entrada, com nome iniciando em `relatorio-`, seguido do nome do arquivo de entrada e da data da execução. O caminho final é impresso ao encerrar.
+  **Partido entre épicos** — **FR-1a** (aceitar o caminho como argumento) fica na Story 1.7, porque sem ele o Épico 1 não é executável de ponta a ponta; **FR-1b** (escrever, nomear e imprimir o caminho) fica na Story 2.6, onde existe relatório para escrever.
 - **FR-2** — Ao encerrar, o sistema reporta ao operador: total de reclamações lidas, total analisadas com sucesso, total não analisadas e total de sinais derrubados pela verificação de evidência.
 - **FR-3** — CSV com coluna ausente, schema divergente ou identificador duplicado é rejeitado antes de qualquer chamada de LLM, com mensagem que nomeia a causa. Realiza CAP-1.
 - **FR-4** — Se o arquivo de saída já existir, o sistema encerra sem escrever, nomeando o arquivo existente. Sobrescrever exige sinalizador explícito na linha de comando.
@@ -120,9 +121,14 @@ Não há documento de UX: o produto entrega um arquivo HTML estático e a spine 
 
 **Estrutura de arquivos (structural seed):** `plataforma/{estado,catalogo,ingestao,analise,evidencia,pontuacao,agregacao,relatorio,grafo,config}.py`, `plataforma/templates/relatorio.html.j2`, `main.py`, `tests/`.
 
-**Catálogo de sinais (CAP-4):** `cobranca_indevida`, `prazo_estourado`, `registro_contraditorio`, `servico_nao_contratado`, `lei_citada`. Cada um exige definição escrita com exemplo dentro do prompt — é o fator de maior impacto na acurácia.
+**Catálogo de sinais (CAP-4) — seis códigos, ratificado em 2026-08-07.** Fonte única: `risk-signals.md`.
 
-**Pesos do score (v1):** dinheiro do cliente retido = 3 · `Status` = Respondida = −1 · ameaça explícita = 3 · dano continuado = 2 · registro contraditório = 2 · prazo estourado = 1. Corte binário a partir de 3 pontos.
+- Sinal A, intenção jurídica declarada, **grupo saturado**: `ameaca_explicita`, `lei_citada`
+- Sinal B, exposição factual: `dinheiro_retido`, `registro_contraditorio`, `dano_continuado`, `prazo_estourado`
+
+Cada um exige definição escrita com exemplo dentro do prompt — é o fator de maior impacto na acurácia.
+
+**Pesos do score (v1) — ratificados em 2026-08-07 contra `risk-signals.md`:** `dinheiro_retido` = 3 · `ameaca_explicita` = 3 · `lei_citada` = 3 · `registro_contraditorio` = 2 · `dano_continuado` = 2 · `prazo_estourado` = 1 · `Status` = Respondida = −1 (modificador, atributo do CSV). `ameaca_explicita` e `lei_citada` saturam: juntos valem 3, nunca 6. Corte binário a partir de 3 pontos.
 
 **Governança de dados:**
 
@@ -150,7 +156,8 @@ Não há documento de UX: o produto entrega um arquivo HTML estático e a spine 
 
 | FR | Épico | O quê |
 |---|---|---|
-| FR-1 | 2 | Nome `relatorio-*` e caminho impresso ao encerrar |
+| FR-1a | 1 | Caminho do CSV aceito como argumento de linha de comando |
+| FR-1b | 2 | Nome `relatorio-*` ao lado do CSV e caminho impresso ao encerrar |
 | FR-2 | 1 | Quatro contagens no terminal do operador |
 | FR-3 | 1 | Rejeição de schema divergente ou id duplicado antes de chamada paga |
 | FR-4 | 2 | Arquivo de saída existente encerra; flag explícita para sobrescrever |
@@ -169,7 +176,9 @@ Não há documento de UX: o produto entrega um arquivo HTML estático e a spine 
 | FR-17 | 2 | pt-BR em rótulos, categorias e formatação numérica |
 | FR-18 | 2 | Ressalva fixa ao lado de cada gráfico |
 
-**Cobertura:** 18/18 FRs. NFRs: NFR-2, NFR-3, NFR-4, NFR-5, NFR-7, NFR-8, NFR-10 no Épico 1; NFR-6 e NFR-9 no Épico 2; NFR-1 aferido no Épico 3.
+**Cobertura:** 18/18 FRs. FR-1 é o único partido entre épicos, e a partição está no próprio texto do requisito: a metade que aceita o argumento (FR-1a) é o que torna o Épico 1 executável de ponta a ponta; a metade que escreve e nomeia o arquivo (FR-1b) só faz sentido quando existe relatório para escrever.
+
+NFRs: NFR-2, NFR-4, NFR-5, NFR-7, NFR-8 e NFR-10 no Épico 1; NFR-6 e NFR-9 no Épico 2; NFR-1 e NFR-3 aferidos no Épico 3 (Story 3.2).
 
 ## Epic List
 
@@ -177,8 +186,8 @@ Não há documento de UX: o produto entrega um arquivo HTML estático e a spine 
 
 O operador executa o comando sobre um CSV e o terminal responde com quatro números honestos — lidas, analisadas, não analisadas, sinais derrubados. Todo sinal que sobreviveu carrega citação literal verificada contra o texto original. Falha em um lote não derruba a execução dos demais.
 
-**FRs covered:** FR-2, FR-3, FR-5, FR-6, FR-7
-**NFRs:** NFR-2, NFR-3, NFR-4, NFR-5, NFR-7, NFR-8, NFR-10
+**FRs covered:** FR-1a, FR-2, FR-3, FR-5, FR-6, FR-7
+**NFRs:** NFR-2, NFR-4, NFR-5, NFR-7, NFR-8, NFR-10
 **ADs:** AD-1, AD-2, AD-3, AD-5, AD-6, AD-7, AD-8, AD-9, AD-16, AD-17, AD-18, AD-19, AD-20, AD-21
 **Arquivos:** `estado.py`, `catalogo.py`, `config.py`, `ingestao.py`, `analise.py`, `evidencia.py`, `grafo.py`, `main.py`
 **Standalone:** entrega o pipeline de análise verificada e a observabilidade do operador sem depender do Épico 2.
@@ -187,7 +196,7 @@ O operador executa o comando sobre um CSV e o terminal responde com quatro núme
 
 O gestor recebe o HTML por anexo, abre no navegador sem instalar nada, e a fila de prioridade é a primeira coisa na tela — cada item com a frase do cliente que o colocou ali. Abaixo, ranking e sentimento com as ressalvas que dizem o que aquelas leituras não provam. Execução degradada aparece marcada no próprio arquivo.
 
-**FRs covered:** FR-1, FR-4, FR-8, FR-9, FR-10, FR-11, FR-12, FR-13, FR-14, FR-15, FR-16, FR-17, FR-18
+**FRs covered:** FR-1b, FR-4, FR-8, FR-9, FR-10, FR-11, FR-12, FR-13, FR-14, FR-15, FR-16, FR-17, FR-18
 **NFRs:** NFR-6, NFR-9
 **ADs:** AD-4, AD-10, AD-11, AD-13, AD-14, AD-15, AD-22
 **Arquivos:** `pontuacao.py`, `agregacao.py`, `relatorio.py`, `templates/relatorio.html.j2`, `grafo.py`, `main.py`
@@ -198,7 +207,7 @@ O gestor recebe o HTML por anexo, abre no navegador sem instalar nada, e a fila 
 Os números do PRD deixam de ser afirmados e passam a ser medidos sobre a saída real do pipeline. M-1 rodado contra `docs/gabarito.csv`, NFR-1 cronometrado com cache desligado, M-6 demonstrado por diff. As três parcelas que a base nunca exercita ganham caso construído à mão, e a verificação de citação é exercitada por citação falsa injetada de propósito.
 
 **FRs covered:** nenhum novo — este épico mede o que os anteriores construíram
-**Cobre:** M-1, M-3, M-6, CM-1, CM-2, CM-3, CM-4, Q-4, Q-8
+**Cobre:** M-1, M-2, M-3, M-4, M-6, NFR-1, NFR-3, CM-1, CM-2, CM-3, CM-4, Q-4, Q-8
 **Arquivos:** `tests/`, instrumentação pontual
 **Standalone:** depende de 1 e 2; nenhum dos dois depende dele.
 
@@ -238,8 +247,10 @@ So that nenhuma etapa posterior invente forma de dado nem repita um código de s
 
 **Given** o módulo `plataforma/catalogo.py`
 **When** ele é importado
-**Then** declara os sete códigos do catálogo — os cinco do sinal B de `risk-signals.md` (`cobranca_indevida`, `prazo_estourado`, `registro_contraditorio`, `servico_nao_contratado`, `lei_citada`) mais `ameaca_explicita` e `dano_continuado` — cada um com definição escrita e exemplo
+**Then** declara os seis códigos do catálogo de `risk-signals.md` — sinal B: `dinheiro_retido`, `registro_contraditorio`, `dano_continuado`, `prazo_estourado`; sinal A: `ameaca_explicita`, `lei_citada` — cada um com definição escrita e exemplo
+**And** `dinheiro_retido` é definido como *a empresa está com dinheiro do cliente*, cobrindo as seis categorias que o gabarito marcou: estorno não feito, conta bloqueada, produto pago e não entregue, produto defeituoso não trocado, assinatura ainda cobrada, e débito sem contratação
 **And** `ameaca_explicita` é um código do catálogo como qualquer outro, sujeito à mesma regra de evidência, e não um campo booleano à parte (AD-1)
+**And** `ameaca_explicita` e `lei_citada` estão declarados como membros de um grupo saturado, para que `pontuacao.py` os leia sem repetir a regra
 **And** declara a lista canônica de termos genéricos de produto
 **And** nenhum outro módulo do pacote declara um código de sinal como literal (AD-18, AD-21)
 
@@ -436,6 +447,12 @@ So that eu distinga uma execução limpa de uma execução silenciosamente degra
 
 **Acceptance Criteria:**
 
+**Given** o comando invocado com o caminho de um CSV como argumento de linha de comando
+**When** ele executa
+**Then** a execução roda sobre aquele arquivo, sem caminho embutido no código (FR-1a)
+**And** invocar sem argumento encerra com mensagem de uso
+**And** esta é a metade de FR-1 que o Épico 1 precisa para ser executável; a escrita e a nomeação do HTML são FR-1b, na Story 2.6
+
 **Given** uma execução concluída
 **When** o comando encerra
 **Then** o terminal imprime quatro números: total lidas, total analisadas, total não analisadas e total de códigos de sinal derrubados na verificação (FR-2)
@@ -454,9 +471,16 @@ So that eu distinga uma execução limpa de uma execução silenciosamente degra
 **When** ela chega ao fim do fan-out
 **Then** encerra com a causa nomeada e não escreve arquivo algum (AD-13)
 
+**Given** a API indisponível ou sem credencial válida
+**When** a execução encerra
+**Then** a causa é nomeada — indisponibilidade ou credencial ausente, não uma mensagem genérica
+**And** informa **quantos lotes haviam concluído** antes do encerramento
+**And** sem esse número o operador não distingue "a chave está errada e nada rodou" de "a API caiu no meio e três de cinco lotes voltaram" (§6 do PRD)
+
 **Given** a base de referência com a API respondendo normalmente
 **When** a execução termina
 **Then** reporta 50 lidas, 50 analisadas, 0 não analisadas
+**And** esta AC é **verificação manual de aceitação** — exige rede e crédito, e é a única do Épico 1 fora da suíte determinística (AD-12)
 
 **Given** o módulo `main.py`
 **When** seus imports são inspecionados
@@ -480,10 +504,20 @@ So that eu decida sobre a evidência e não sobre a palavra do sistema.
 **And** nenhum código de sinal aparece como literal solto no módulo (AD-18)
 **And** o corte binário de 3 pontos é declarado no mesmo lugar
 
-**Given** os pesos por código `[ASSUMPTION]` — correspondência entre as parcelas nomeadas em `risk-signals.md` e os códigos do catálogo, a ratificar antes da implementação
+**Given** os pesos por código, ratificados em 2026-08-07 contra a tabela canônica de `risk-signals.md`
 **When** eles são declarados
-**Then** `cobranca_indevida` = 3, `servico_nao_contratado` = 3, `ameaca_explicita` = 3, `registro_contraditorio` = 2, `dano_continuado` = 2, `lei_citada` = 2, `prazo_estourado` = 1
+**Then** `dinheiro_retido` = 3, `ameaca_explicita` = 3, `lei_citada` = 3, `registro_contraditorio` = 2, `dano_continuado` = 2, `prazo_estourado` = 1
 **And** `Status == "Respondida"` aplica modificador −1, nunca como parcela independente
+
+**Given** uma reclamação com `ameaca_explicita` **e** `lei_citada` ambos válidos
+**When** `pontuar` executa
+**Then** o grupo do sinal A contribui 3 pontos, não 6 — os dois códigos saturam
+**And** a saturação é lida da declaração do grupo em `catalogo.py`, não reimplementada em `pontuacao.py` (AD-18)
+
+**Given** uma reclamação com `dinheiro_retido` válido e `Status = "Respondida"`
+**When** `pontuar` executa
+**Then** a pontuação é 2 e o item **não** entra na fila
+**And** este é o caso que dá precisão de 100% à regra medida — os dois únicos falsos positivos observados são cobranças indevidas com `Status = Respondida` (M-1)
 
 **Given** uma `Analise` com um `Sinal` de `valida = True`
 **When** `pontuar` executa
@@ -548,6 +582,11 @@ So that eu não descubra depois que o ranking somava algo diferente do que a fil
 **When** `agregar` executa
 **Then** o indicador de degradação também fica verdadeiro, ainda que a contagem de não analisadas seja zero (NFR-6, AD-13)
 
+**Given** as reclamações com `na_fila = True`
+**When** `agregar` executa
+**Then** produz a fila ordenada por `pontos` decrescente
+**And** o desempate é por `data` mais antiga primeiro, e persistindo o empate por `id` em ordem crescente — a ordem é total e determinística, para que duas execuções sobre a mesma entrada produzam a mesma fila (NFR-8)
+
 **Given** `agregar`
 **When** ele executa
 **Then** ordena e conta, e nunca decide pertencimento à fila — `na_fila` já veio de `pontuar` (AD-19)
@@ -574,6 +613,8 @@ So that eu responda *o que atendo primeiro* sem rolar a página nem clicar em na
 **Given** o relatório renderizado
 **When** ele é aberto no navegador
 **Then** a fila de prioridade é o primeiro conteúdo, antes de qualquer agregado (FR-11)
+**And** o item mais grave é o primeiro da fila — o template preserva a ordem que `agregar` produziu e não reordena (AD-19, AD-22)
+**And** sem isso a fila é uma lista com adjetivo, e a UJ-2 depende de a primeira coisa na tela ser também a mais grave
 
 **Given** um item da fila
 **When** ele é renderizado
@@ -667,12 +708,12 @@ So that eu possa comparar execuções e não vaze um relatório de base real par
 **Given** a execução sobre `docs/reclamacoes_reclameaqui.csv`
 **When** o arquivo é escrito
 **Then** nasce ao lado do CSV de entrada
-**And** o nome começa com `relatorio-`, seguido do nome do arquivo de entrada e da data da execução (FR-1, AD-15)
+**And** o nome começa com `relatorio-`, seguido do nome do arquivo de entrada e da data da execução (FR-1b, AD-15)
 **And** casa com o glob `relatorio-*.html` já coberto pelo `.gitignore` (DG-2)
 
 **Given** a execução concluída
 **When** o comando encerra
-**Then** o caminho final do arquivo é impresso ao operador (FR-1)
+**Then** o caminho final do arquivo é impresso ao operador (FR-1b)
 
 **Given** um arquivo de saída que já existe
 **When** a execução chega ao momento de escrever
@@ -727,6 +768,7 @@ So that eu saiba que a métrica mede o produto e não um classificador de mediç
 **When** ele é registrado
 **Then** o número real é reportado como saiu, com os itens divergentes nomeados por identificador
 **And** o limiar não é reajustado para acomodar o resultado
+**And** a story está **pronta quando a medição está registrada** — um resultado abaixo do limiar abre um item de correção de curso, não reprova o épico nem bloqueia a entrega
 
 **Given** a fila produzida
 **When** sua ocupação é calculada
