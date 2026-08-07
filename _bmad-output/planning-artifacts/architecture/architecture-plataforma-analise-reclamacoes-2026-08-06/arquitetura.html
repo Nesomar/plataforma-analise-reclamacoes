@@ -379,7 +379,9 @@ class Estado(TypedDict):
 
   <p><b>O LLM empata com a regra determinística.</b> Zero divergências nas 50 reclamações — não é empate estatístico, as duas abordagens tomam a mesma decisão em cada linha.</p>
 
-  <p>Duas leituras, ambas verdadeiras. O LLM se validou: reconstruiu a categorização inteira lendo só o texto livre, sem nunca ver o título canônico que a regra consome de graça — numa base sem títulos padronizados, a regra não existiria. E o LLM não se paga aqui: reproduzir um <code>set</code> de seis strings é custo sem retorno.</p>
+  <p>E o empate é menos surpreendente do que parece. Os dois sistemas codificam a mesma resposta, vinda do mesmo humano: a regra casa seis títulos extraídos do gabarito, e o prompt do modelo enumera em prosa <b>as mesmas seis situações</b>. Nenhum dos dois descobriu o critério — ambos o receberam.</p>
+
+  <p>A diferença real é estreita, e vale nomeá-la sem inflar. O modelo recebe apenas <code>id</code> e o texto livre, então precisa mapear prosa de consumidor àquelas seis situações; a regra compara uma string com um conjunto. É a única razão pela qual a paridade não é tautológica. O que sobra, na prática: nesta base o LLM é custo sem retorno, e numa base sem títulos padronizados — que é toda base real — a regra determinística não existiria para ser comparada.</p>
 
   <h3>O que esta base não exercita</h3>
 

@@ -106,11 +106,11 @@ O mapeamento é direto: um módulo por filtro, o estado em um módulo próprio q
 - **Binds:** `grafo`, `agregacao`, `relatorio`, §6 do PRD
 - **Prevents:** API fora do ar produzir 50 falhas, satisfazer AD-6 com `50 == 0 + 50`, e a execução seguir feliz até escrever um HTML sobre zero análises — que é o "relatório parcial silencioso" que o PRD proíbe em letra
 - **Rule:** se `len(analises) == 0`, a execução encerra com a causa nomeada e **não escreve arquivo**, independentemente de AD-5 ter classificado as falhas como conteúdo. A mesma porta cobre CSV vazio: nenhuma reclamação lida encerra em `carregar`, antes do fan-out.
-  Segunda condição, que o contador de análises não pega: se o modelo propôs ao menos um sinal e **100% deles foram derrubados** por AD-2, o relatório é marcado degradado. Cinquenta análises com todas as citações fabricadas produzem `len(analises) == 50`, zero falhas, NFR-6 lendo 0% — e um relatório de aparência impecável sobre um modelo quebrado. A taxa de derrubada é o único sinal que enxerga esse estado.
+  Segunda condição, que o contador de análises não pega: se o modelo propôs ao menos um código de sinal e **todos foram derrubados** por AD-2 — a unidade é o código, como fixado ali —, o relatório é marcado degradado (NFR-6, segunda condição). Cinquenta análises com todas as citações fabricadas produzem `len(analises) == 50`, zero falhas, NFR-6 lendo 0% — e um relatório de aparência impecável sobre um modelo quebrado. A taxa de derrubada é o único sinal que enxerga esse estado.
 
 ### AD-14 — Leitura não validada não se apresenta como validada
 
-- **Binds:** `relatorio`, template, §1 e M-5 do PRD
+- **Binds:** `relatorio`, template, FR-18, §1 e M-5 do PRD
 - **Prevents:** o relatório dar à distribuição de sentimento e ao ranking de produtos a mesma autoridade visual que dá à fila, quando a §1 do PRD registra que esta base não exercita nenhuma das duas
 - **Rule:** distribuição de sentimento e ranking de produtos carregam, no próprio relatório, a ressalva do que os limita nesta base — sentimento constante e produto genérico. A ressalva é texto do template, ao lado do gráfico, não nota de rodapé. Mesmo tratamento estrutural de FR-16.
 
