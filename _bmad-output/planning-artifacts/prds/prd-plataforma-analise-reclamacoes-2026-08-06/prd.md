@@ -87,11 +87,12 @@ Quatro termos que este documento usa com sentido preciso e que se confundem com 
 - **FR-10** — O relatório é um arquivo único que abre em navegador sem servidor, sem instalação e sem qualquer requisição de rede. Realiza CAP-8.
 - **FR-11** — A fila de prioridade é o primeiro conteúdo do relatório, antes de qualquer agregado.
 - **FR-12** — Cada item da fila exibe o que sustentou sua classificação — a citação literal, ou o motivo estrutural de FR-9 — como conteúdo visível e não como detalhe expansível.
-- **FR-13** — O ranking de produtos declara no próprio relatório que volume não equivale a gravidade — o produto mais reclamado tende a ser o mais vendido — e inclui `não identificado` como linha visível (FR-8).
+- **FR-13** — O ranking de produtos declara no próprio relatório que volume não equivale a gravidade — o produto mais reclamado tende a ser o mais vendido — e inclui `não identificado` como linha visível (FR-8). Produto identificado mas genérico é marcado como tal no ranking — a lista de termos genéricos é uma só e vive junto do catálogo de sinais; CM-3 mede sobre ela. Um termo que não nomeia produto algum ocupando o topo do ranking é informação sobre a análise, não sobre a empresa.
 - **FR-14** — O relatório informa a data da execução, o total de reclamações analisadas e o **total não analisado por falha**. O leitor precisa poder distinguir um relatório completo de um relatório sobre metade da base; hoje esse número existe apenas no terminal do operador, que o leitor nunca vê.
 - **FR-15** — O relatório apresenta graficamente a distribuição de sentimento e o ranking de produtos. O gráfico é gerado embutido no arquivo (SVG inline ou equivalente), nunca por biblioteca carregada da rede, sob pena de violar FR-10.
 - **FR-16** — O relatório declara, em texto visível ao leitor, que a classificação de risco é heurística de engenharia e não parecer jurídico. *(O produto entrega uma fila rotulada como risco jurídico, com citação literal do cliente, a um gestor que vai agir sobre ela. A ressalva existe no SPEC e precisa chegar a quem decide.)*
 - **FR-17** — O relatório é legível em português do Brasil, incluindo rótulos, categorias e números formatados na convenção local.
+- **FR-18** — A distribuição de sentimento e o ranking de produtos carregam, ao lado do próprio gráfico e não em nota de rodapé, a ressalva que nomeia o que limita cada leitura. O texto é fixo, escrito para esta base — não é calculado em tempo de execução. *(A §1 registra que esta base não exercita nenhuma das duas leituras: sentimento é negativo em 50 de 50 e o ranking é raso. Sem ressalva, um gráfico dá às duas a mesma autoridade visual que a fila tem — e a fila é a única leitura que o dado sustenta.)*
 
 ## 4. Requisitos não-funcionais
 
@@ -108,7 +109,9 @@ Quatro termos que este documento usa com sentido preciso e que se confundem com 
 ### 4.3 Confiabilidade
 
 - **NFR-5** — Falha em uma reclamação não interrompe a execução das demais. A reclamação afetada é registrada como não analisada e contabilizada (FR-2, FR-14).
-- **NFR-6** — Acima de 10% de reclamações não analisadas, o sistema marca o relatório como degradado no próprio arquivo, de forma visível ao leitor. Uma execução que perdeu um sexto da base não pode ter a mesma aparência de uma execução limpa.
+- **NFR-6** — O sistema marca o relatório como degradado, no próprio arquivo e de forma visível ao leitor, quando qualquer uma de duas condições ocorre. Uma execução que não foi confiável não pode ter a mesma aparência de uma que foi.
+  1. **Acima de 10% de reclamações não analisadas.** Perder um décimo da base muda o que o relatório significa.
+  2. **Todos os códigos de sinal propostos foram derrubados** na verificação de evidência — a unidade é o código derrubado, a mesma que FR-2 e CM-2 reportam. A primeira condição não enxerga este caso: uma base inteira analisada com todas as citações fabricadas produz contagem cheia e zero falhas. A taxa de derrubada é o único sinal que alcança esse estado.
 - **NFR-7** — Resposta do modelo é casada por identificador, nunca por posição. A comparação detecta tanto o identificador que faltou quanto o identificador que o modelo devolveu sem ter sido pedido — item repetido ou inventado é descartado, não somado. Ver `state-contract.md`.
 - **NFR-8** — Duas execuções sobre o mesmo arquivo produzem os mesmos identificadores de reclamação. A classificação pode variar entre execuções; a identidade da reclamação, não.
 
@@ -142,6 +145,8 @@ A regra que organiza a tabela: **falha de infraestrutura encerra sem gerar relat
 | Resposta do modelo malformada ou incompleta | Registra as reclamações afetadas como não analisadas e prossegue (NFR-5) |
 | Modelo devolve identificador repetido ou inexistente | Descarta o item; não soma aos agregados. O casamento é por identificador, nunca por posição (NFR-7) |
 | Mais de 10% da base não analisada | Gera o relatório marcado como degradado, visível ao leitor (NFR-6) |
+| **Nenhuma reclamação analisada** | Encerra sem escrever arquivo. Falha absorvida não é permissão para produzir relatório sobre nada |
+| **Todos os códigos de sinal propostos derrubados** | Gera o relatório marcado como degradado (NFR-6). A contagem de reclamações não acusa este caso: base analisada por inteiro, zero falhas |
 | Citação inexistente no texto original | Derruba aquele sinal, contabiliza e reporta (FR-7) |
 | Citação vazia ou com menos de cinco palavras | O sinal não é registrado (FR-6) — string vazia passaria na verificação de FR-7 e não sustentaria nada |
 | Nenhuma reclamação atinge o corte da fila | Gera o relatório normalmente, com a fila vazia declarada como tal — fila vazia é informação, não erro |
@@ -163,6 +168,10 @@ A regra que organiza a tabela: **falha de infraestrutura encerra sem gerar relat
 
   Regra determinística e Gemini 3.6 Flash produzem resultado idêntico, com zero divergências item a item — o LLM não superou a regra nesta base. Ver `risk-signals.md`.
 
+  **Por que o empate é menos surpreendente do que parece.** Os dois sistemas codificam a mesma resposta, derivada do mesmo humano. A regra casa seis strings de `Titulo` extraídas do gabarito; o prompt do modelo enumera, em prosa, as **mesmas seis situações** — estorno não feito, cobrança não contratada, conta bloqueada, produto pago não entregue, produto defeituoso sem troca, assinatura que segue cobrada. Nenhum dos dois descobriu o critério: ambos o receberam.
+  A diferença real é estreita, e vale nomeá-la sem inflar. O modelo recebe apenas `id` e o texto livre — título e empresa nunca entram no payload —, então precisa mapear prosa de consumidor às seis situações. A regra compara uma string com um conjunto. É trabalho diferente, e é a única razão pela qual a paridade não é tautológica.
+  O que isso significa na prática: nesta base o LLM é custo sem retorno, e numa base sem títulos padronizados — que é toda base real — a regra determinística não existiria para ser comparada. Nenhuma das duas frases é elogio ao modelo.
+
   > **Sobre a escolha dos limiares.** Tanto o alvo anterior (F1 ≥ 0,85) quanto estes números foram fixados em 2026-08-06, *depois* de coletar o gabarito e medir. Um limiar escolhido com o resultado à vista mede menos do que parece medir. O piso de 65% é registrado como aquilo que é — o patamar em que a regra de precisão máxima efetivamente aterrissa, não uma exigência derivada de necessidade do negócio.
 - **M-2 — Integridade da evidência.** 100% das citações presentes no relatório final são trecho literal do texto original, com no mínimo cinco palavras (FR-6).
 - **M-3 — Tempo de execução.** Até 2 minutos para 50 reclamações (NFR-1).
@@ -179,7 +188,7 @@ Números que, subindo, indicam que o produto está falhando **apesar** de as mé
   **Medida em 2026-08-06:** o julgamento humano ocupou 38% da base e os classificadores reproduzem essa proporção. Abaixo do limiar, mas com folga de dois pontos — a contramétrica é útil e apertada, não folgada.
 - **CM-2 — Taxa de sinais derrubados na verificação.** Subindo, indica que o modelo está fabricando evidência e o prompt precisa de ajuste. Em zero constante, indica que a verificação pode não estar sendo exercida.
   **Medida em 2026-08-06:** zero derrubadas em 50 reclamações. O mecanismo foi exercitado apenas em autoteste com citação falsa injetada de propósito; a base real nunca o acionou. A contramétrica disparou exatamente o alerta que foi desenhada para dar — o número bom aqui é indistinguível de mecanismo morto sem o teste sintético.
-- **CM-3 — Taxa de produto não nomeado.** Soma de duas coisas: produto nulo **e** produto genérico — `fatura`, `compra`, `produto`, `serviço`, `pedido` e afins, que preenchem o campo sem nomear nada.
+- **CM-3 — Taxa de produto não nomeado.** Soma de duas coisas: produto nulo **e** produto genérico — `fatura`, `compra`, `produto`, `serviço` e afins, que preenchem o campo sem nomear nada. Esta é a lista canônica; FR-13 marca no ranking exatamente o que ela define.
   **Medida em 2026-08-06:** produto nulo em 1 de 50 (2%, aparência saudável), produto genérico em 18 de 50. **Real: 38%.** A versão anterior desta contramétrica só contava o nulo — media exatamente o caso que o modelo evita, porque um modelo instruído a extrair um produto sempre encontra algum substantivo. Uma contramétrica que só observa o caso improvável não é contramétrica.
 - **CM-4 — Reclamações não analisadas por falha.** Qualquer valor acima de zero numa execução limpa merece investigação antes de o relatório ser enviado.
 
