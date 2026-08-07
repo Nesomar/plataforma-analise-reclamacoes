@@ -1,0 +1,77 @@
+# generated: 2026-08-06
+# last_updated: 2026-08-06
+# project: plataforma-analise-reclamacoes
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog -> in-progress: Automatically when first story is created (via create-story)
+#   - in-progress -> done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# Action Item Status:
+#   - open: Committed during a retrospective, not yet addressed
+#   - in-progress: Actively being worked on
+#   - done: Completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+# - Retrospective appends its action items to action_items; sprint-status surfaces open ones
+
+generated: 2026-08-06
+last_updated: 2026-08-07
+project: plataforma-analise-reclamacoes
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 1: O operador roda a base e sabe se pode confiar no resultado
+  epic-1: in-progress
+  1-1-contrato-de-estado-e-catalogo-de-sinais: done
+  1-2-configuracao-validada-antes-de-qualquer-chamada-paga: backlog
+  1-3-ingestao-que-rejeita-base-invalida-antes-de-gastar: backlog
+  1-4-verificacao-de-evidencia-deterministica: backlog
+  1-5-analise-de-um-lote-pelo-modelo: backlog
+  1-6-fan-out-por-lote-com-falha-absorvida: backlog
+  1-7-as-quatro-contagens-do-operador: backlog
+  epic-1-retrospective: optional
+
+  # Epic 2: O gestor abre um arquivo e sabe o que atender primeiro
+  epic-2: backlog
+  2-1-pontuacao-que-carrega-o-motivo-de-cada-item-da-fila: backlog
+  2-2-agregacao-que-fecha-com-a-contagem-direta: backlog
+  2-3-relatorio-com-a-fila-no-topo-e-a-evidencia-a-vista: backlog
+  2-4-graficos-embutidos-com-a-ressalva-ao-lado: backlog
+  2-5-o-relatorio-declara-sua-propria-confiabilidade: backlog
+  2-6-o-arquivo-entregue-nasce-seguro-e-autocontido: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: A fila prova que acerta e o grafo prova que e extensivel
+  epic-3: backlog
+  3-1-a-fila-do-pipeline-medida-contra-o-gabarito: backlog
+  3-2-o-tempo-e-o-custo-de-uma-execucao-medidos: backlog
+  3-3-a-extensibilidade-do-grafo-demonstrada-por-diff: backlog
+  epic-3-retrospective: optional

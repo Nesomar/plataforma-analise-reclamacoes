@@ -6,3 +6,16 @@ dependencies = [
     "google-genai>=2.17.0",
     "python-dotenv>=1.2.2",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
+
+# Sem [build-system]: o pacote não é instalado, o import resolve pelo diretório de
+# trabalho. Sem isto `uv run pytest` não acha `plataforma`.
+[tool.pytest.ini_options]
+pythonpath = ["."]
+# Sem testpaths, pytest invocado de um subdiretório coleta zero testes e sai com
+# sucesso aparente — uma suíte que não roda é indistinguível de uma suíte verde.
+testpaths = ["tests"]
