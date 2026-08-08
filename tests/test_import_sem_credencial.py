@@ -3,7 +3,8 @@
 import importlib
 import sys
 
-MODULOS = ["plataforma.estado", "plataforma.catalogo", "plataforma.config"]
+MODULOS = ["plataforma.estado", "plataforma.catalogo", "plataforma.config",
+           "plataforma.ingestao"]
 
 
 def test_importa_sem_google_api_key(monkeypatch):

@@ -16,3 +16,12 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-2-configuracao-validada-antes-de-qualquer-chamada-paga.md`
   summary: O `README.md` deixou de mencionar `GEMINI_API_KEY`, mas `classificador.py:125` ainda faz a ponte para `GOOGLE_API_KEY` — caminho de credencial vivo no código e invisível na documentação.
   evidence: A ponte é código morto: `google-genai 2.17.0` já lê as duas variáveis com precedência e fallback em `_api_client.py:101-117`. Nada quebra hoje, e a Story 3.1 depende de `classificador.py` intacto — por isso não foi tocado aqui. Remover a linha quando a Story 3.1 liberar o arquivo.
+
+## Deferred from: code review of 1-3-ingestao-que-rejeita-base-invalida-antes-de-gastar (2026-08-08)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-3-ingestao-que-rejeita-base-invalida-antes-de-gastar.md`
+  summary: `Reclamacao.status` continua sem validação contra o `Literal` de cinco valores — a dívida registrada na revisão da Story 1.1 apontava para "Story 1.3, na fronteira de leitura", mas as ACs reais de `epics.md` para esta story não pedem essa validação, e o spec desta story a listou explicitamente como fora de escopo.
+  evidence: Um `Status` fora dos cinco valores (erro de digitação na origem, ou base real com rótulo novo) entra no estado sem erro nenhum e só se manifesta silenciosamente onde `Status == "Respondida"` é lido como modificador de pontuação (Story 2.1). Redirecionar para lá, que é o primeiro nó que de fato lê `Status`.
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-3-ingestao-que-rejeita-base-invalida-antes-de-gastar.md`
+  summary: A detecção de `ID_Reclamacao` duplicado compara strings cruas, sem `strip()`; dois ids que diferem só por espaço em volta (`"RA1"` vs `"RA1 "`) passam como distintos, e um id vazio (não duplicado) não é rejeitado.
+  evidence: `state-contract.md` garante unicidade só na origem, não formatação. Nenhuma AC desta story cobre esse caso e a base de referência não o exercita — risco real, mas baixo, contra uma base sintética controlada. Vale reavaliar se uma base real (Q-5 do SPEC, ainda em aberto) chegar com essa forma de ruído.
