@@ -15,7 +15,7 @@ from typing import get_args, get_type_hints
 
 import pytest
 
-from plataforma import catalogo, estado
+from plataforma import catalogo, config, estado
 
 CAMPOS_PROIBIDOS = {"sinal_a", "sinal_b", "evidencia"}
 
@@ -125,9 +125,15 @@ def test_motivo_carrega_proveniencia():
 @pytest.mark.parametrize("modulo, permitidos", [
     (estado, {"typing", "operator"}),
     (catalogo, {"unicodedata", "types"}),
+    (config, {"os", "typing", "dotenv"}),
 ])
 def test_modulos_folha_so_importam_o_que_a_story_permite(modulo, permitidos):
-    """AC1, AC5 e AD-7: nenhum import de plataforma/, nenhum de terceiro."""
+    """AC1, AC5 e AD-7: nenhum import de plataforma/, e de terceiro só o que está aqui.
+
+    A whitelist é explícita por módulo, não uma regra genérica contra terceiros:
+    `config` importa `dotenv`, que é o mecanismo único de configuração. Qualquer import
+    fora da lista do próprio módulo reprova — inclusive `google`, que é o ponto.
+    """
     intrusos = importados_por(modulo) - permitidos
     assert not intrusos, \
         f"{modulo.__name__} importa {sorted(intrusos)}; permitido: {sorted(permitidos)}"
