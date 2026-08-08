@@ -25,3 +25,12 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-3-ingestao-que-rejeita-base-invalida-antes-de-gastar.md`
   summary: A detecção de `ID_Reclamacao` duplicado compara strings cruas, sem `strip()`; dois ids que diferem só por espaço em volta (`"RA1"` vs `"RA1 "`) passam como distintos, e um id vazio (não duplicado) não é rejeitado.
   evidence: `state-contract.md` garante unicidade só na origem, não formatação. Nenhuma AC desta story cobre esse caso e a base de referência não o exercita — risco real, mas baixo, contra uma base sintética controlada. Vale reavaliar se uma base real (Q-5 do SPEC, ainda em aberto) chegar com essa forma de ruído.
+
+## Deferred from: code review of 1-4-verificacao-de-evidencia-deterministica (2026-08-08)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-verificacao-de-evidencia-deterministica.md`
+  summary: `verificar()` não valida a forma de `sinais` — um `Sinal` malformado (chave `citacao`/`codigo` ausente, ou `citacao` não-string vinda de uma extração de modelo mal comportada) levanta `KeyError`/`TypeError` cru de dentro de uma compreensão de lista, derrubando o lote inteiro em vez de reportar qual sinal falhou.
+  evidence: Achado convergente de dois revisores independentes (adversarial e edge-case). Hoje `Sinal` só nasce à mão em teste, então o risco é zero — mas a Story 1.5 (`analise.py`) vai construir `Sinal` a partir de `response_schema` do `google-genai`, e a garantia real contra forma malformada é essa validação de schema, não uma guarda em `evidencia.py`. Revisitar se a Story 1.5 mostrar que o schema não fecha essa lacuna.
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-verificacao-de-evidencia-deterministica.md`
+  summary: O piso de "cinco palavras" é `len(citacao.split()) >= 5`, que conta fragmentos como `"R$"` e `"890"` como palavra inteira — uma citação pode cruzar o piso com números/moeda em vez de cinco palavras de contexto real.
+  evidence: Nenhuma AC ou documento define "palavra" com mais precisão que a contagem por espaço em branco, e o risco é de baixa probabilidade (exige citação curta padded com fragmentos numéricos). Vale reavaliar se M-1/M-2 (Épico 3) revelarem citações que passam no piso sem sustentar o sinal de fato.

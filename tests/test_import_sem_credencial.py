@@ -4,7 +4,7 @@ import importlib
 import sys
 
 MODULOS = ["plataforma.estado", "plataforma.catalogo", "plataforma.config",
-           "plataforma.ingestao"]
+           "plataforma.ingestao", "plataforma.evidencia"]
 
 
 def test_importa_sem_google_api_key(monkeypatch):
