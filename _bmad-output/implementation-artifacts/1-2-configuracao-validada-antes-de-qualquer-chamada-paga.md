@@ -1,6 +1,6 @@
 # Story 1.2: Configuração validada antes de qualquer chamada paga
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -66,43 +66,43 @@ so that eu calibre a execução sem tocar código e sem conseguir configurar uma
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Criar `plataforma/config.py`** (AC: 1, 2, 3, 4, 5, 6, 7)
-  - [ ] Declarar os defaults como constantes de módulo: `TAMANHO_LOTE_PADRAO = 10`, `MODELO_PADRAO = "gemini-3.6-flash"`, `FAIXA_LOTE = (2, 25)`
-  - [ ] Comentar o pino do modelo no padrão de `classificador.py:23` — alias móvel invalida comparação de F1 entre execuções
-  - [ ] Comentar que `10` é a premissa de NFR-1 (5 chamadas × lote 10 sobre 50 linhas), **não** um número medido
-  - [ ] Escrever `carregar()` devolvendo um `Config` (`NamedTuple` ou `dataclass(frozen=True)`) com `tamanho_lote: int` e `modelo: str`
-  - [ ] `load_dotenv()` **dentro** de `carregar()`, nunca em escopo de módulo — AC7 exige que o import seja inerte
-  - [ ] Manter `override=False` (o default) e comentar por quê: ambiente real vence `.env`, preservando o `export` documentado no README
-  - [ ] Ler com `os.environ.get(...)` e tratar `None` **e** string vazia/só-espaços como não definido (AC3)
-  - [ ] Validar a faixa e o tipo, levantando `ValueError` com mensagem que nomeia variável, valor observado e faixa
-  - [ ] **Não** expor concorrência (ver *Fora de escopo, com motivo*)
-  - [ ] **Não** ler a chave de API em lugar nenhum do módulo
+- [x] **Task 1 — Criar `plataforma/config.py`** (AC: 1, 2, 3, 4, 5, 6, 7)
+  - [x] Declarar os defaults como constantes de módulo: `TAMANHO_LOTE_PADRAO = 10`, `MODELO_PADRAO = "gemini-3.6-flash"`, `FAIXA_LOTE = (2, 25)`
+  - [x] Comentar o pino do modelo no padrão de `classificador.py:23` — alias móvel invalida comparação de F1 entre execuções
+  - [x] Comentar que `10` é a premissa de NFR-1 (5 chamadas × lote 10 sobre 50 linhas), **não** um número medido
+  - [x] Escrever `carregar()` devolvendo um `Config` (`NamedTuple` ou `dataclass(frozen=True)`) com `tamanho_lote: int` e `modelo: str`
+  - [x] `load_dotenv()` **dentro** de `carregar()`, nunca em escopo de módulo — AC7 exige que o import seja inerte
+  - [x] Manter `override=False` (o default) e comentar por quê: ambiente real vence `.env`, preservando o `export` documentado no README
+  - [x] Ler com `os.environ.get(...)` e tratar `None` **e** string vazia/só-espaços como não definido (AC3)
+  - [x] Validar a faixa e o tipo, levantando `ValueError` com mensagem que nomeia variável, valor observado e faixa
+  - [x] **Não** expor concorrência (ver *Fora de escopo, com motivo*)
+  - [x] **Não** ler a chave de API em lugar nenhum do módulo
 
-- [ ] **Task 2 — Atualizar `.env.example`** (AC: 6)
-  - [ ] Acrescentar `TAMANHO_LOTE=` e `MODELO=`, ambos sem valor à direita do `=`
-  - [ ] Comentar acima de cada um o default e a faixa, já que o valor não pode aparecer
-  - [ ] **Preservar CRLF** — o arquivo está em CRLF hoje; escrever linha nova em LF cria terminação mista
+- [x] **Task 2 — Atualizar `.env.example`** (AC: 6)
+  - [x] Acrescentar `TAMANHO_LOTE=` e `MODELO=`, ambos sem valor à direita do `=`
+  - [x] Comentar acima de cada um o default e a faixa, já que o valor não pode aparecer
+  - [x] **Preservar CRLF** — o arquivo está em CRLF hoje; escrever linha nova em LF cria terminação mista
 
-- [ ] **Task 3 — Corrigir `README.md`** (AC: 6)
-  - [ ] Linha 25: trocar `export GEMINI_API_KEY=...` por `export GOOGLE_API_KEY=...`
-  - [ ] Documentar `TAMANHO_LOTE` e `MODELO` como configuráveis, com default e faixa
-  - [ ] **Não** tocar em `classificador.py` — ver *Não tocar*
+- [x] **Task 3 — Corrigir `README.md`** (AC: 6)
+  - [x] Linha 25: trocar `export GEMINI_API_KEY=...` por `export GOOGLE_API_KEY=...`
+  - [x] Documentar `TAMANHO_LOTE` e `MODELO` como configuráveis, com default e faixa
+  - [x] **Não** tocar em `classificador.py` — ver *Não tocar*
 
-- [ ] **Task 4 — Estender o teste de whitelist de imports** (AC: 7)
-  - [ ] Em `tests/test_contrato.py`, acrescentar `(config, {"os", "dotenv"})` ao `parametrize` de `test_modulos_folha_so_importam_o_que_a_story_permite`
-  - [ ] Ajustar a docstring do teste: hoje diz "nenhum de terceiro", e `dotenv` é terceiro. A regra real é whitelist explícita por módulo — reescrever para isso
-  - [ ] Importar `config` no topo de `test_contrato.py` junto de `estado` e `catalogo`
+- [x] **Task 4 — Estender o teste de whitelist de imports** (AC: 7)
+  - [x] Em `tests/test_contrato.py`, acrescentar `(config, {"os", "dotenv"})` ao `parametrize` de `test_modulos_folha_so_importam_o_que_a_story_permite`
+  - [x] Ajustar a docstring do teste: hoje diz "nenhum de terceiro", e `dotenv` é terceiro. A regra real é whitelist explícita por módulo — reescrever para isso
+  - [x] Importar `config` no topo de `test_contrato.py` junto de `estado` e `catalogo`
 
-- [ ] **Task 5 — Criar `tests/test_config.py`** (AC: 1, 2, 3, 4, 5, 7)
-  - [ ] `monkeypatch.setenv` / `delenv` para cada caso — é o primeiro uso de `setenv` no repositório
-  - [ ] **Neutralizar o `.env` real em todo teste**: se existir um `.env` na raiz da máquina de quem roda, `load_dotenv()` o lê e o teste de default falha. Usar `monkeypatch.chdir(tmp_path)` ou passar por cima do carregamento — decidir e comentar a escolha
-  - [ ] Casos de faixa: `1` e `26` levantam; `2` e `25` passam (os limites são inclusivos)
-  - [ ] Casos de tipo: `abc`, `7.5`, `-3` levantam com mensagem nomeando o valor
-  - [ ] Casos de vazio: `TAMANHO_LOTE=` e `MODELO=` adotam o default
-  - [ ] Um teste que asserta que **importar** `config` com `TAMANHO_LOTE=99` não levanta (AC7)
-  - [ ] Um teste que asserta que a mensagem de erro contém `"2"` e `"25"` e o valor observado
-  - [ ] Escrever `2` e `25` **à mão** no teste, não importar `FAIXA_LOTE` — a fonte duplicada é deliberada, no padrão de `CAMPOS_ESPERADOS` em `tests/test_contrato.py:22-23`
-  - [ ] Rodar `uv run pytest` e confirmar verde
+- [x] **Task 5 — Criar `tests/test_config.py`** (AC: 1, 2, 3, 4, 5, 7)
+  - [x] `monkeypatch.setenv` / `delenv` para cada caso — é o primeiro uso de `setenv` no repositório
+  - [x] **Neutralizar o `.env` real em todo teste**: se existir um `.env` na raiz da máquina de quem roda, `load_dotenv()` o lê e o teste de default falha. Usar `monkeypatch.chdir(tmp_path)` ou passar por cima do carregamento — decidir e comentar a escolha
+  - [x] Casos de faixa: `1` e `26` levantam; `2` e `25` passam (os limites são inclusivos)
+  - [x] Casos de tipo: `abc`, `7.5`, `-3` levantam com mensagem nomeando o valor
+  - [x] Casos de vazio: `TAMANHO_LOTE=` e `MODELO=` adotam o default
+  - [x] Um teste que asserta que **importar** `config` com `TAMANHO_LOTE=99` não levanta (AC7)
+  - [x] Um teste que asserta que a mensagem de erro contém `"2"` e `"25"` e o valor observado
+  - [x] Escrever `2` e `25` **à mão** no teste, não importar `FAIXA_LOTE` — a fonte duplicada é deliberada, no padrão de `CAMPOS_ESPERADOS` em `tests/test_contrato.py:22-23`
+  - [x] Rodar `uv run pytest` e confirmar verde
 
 ## Dev Notes
 
@@ -263,8 +263,59 @@ tests/
 
 ### Agent Model Used
 
+claude-opus-5, via o workflow `bmad-dev-auto`. Spec derivado:
+`spec-1-2-configuracao-validada-antes-de-qualquer-chamada-paga.md`.
+
 ### Debug Log References
+
+- `uv run pytest` — 64 passed (eram 38 antes desta story).
+- `uv run python -c "import plataforma.config, sys; assert not [m for m in sys.modules if m.startswith('google')]"` — sem saída, sem erro.
 
 ### Completion Notes List
 
+**Correção às Dev Notes: `monkeypatch.chdir(tmp_path)` não neutraliza o `.env`.** Verificado
+no `dotenv` instalado (`.venv/Lib/site-packages/dotenv/main.py`): `find_dotenv()` sobe a
+partir do diretório do **arquivo que chamou** (`plataforma/`), não do cwd — acha a raiz do
+projeto de qualquer diretório de trabalho. A neutralização é uma fixture `autouse` que
+troca `config.load_dotenv` por no-op, e que também apaga `TAMANHO_LOTE` e `MODELO` do
+ambiente real (o README manda o operador fazer `export`).
+
+**Respostas às duas perguntas abertas:**
+
+1. **Nome da variável do modelo:** adotado `MODELO`, como a story propôs. Reversível numa
+   linha se colidir com algo no ambiente de alguém.
+2. **Aviso ao usar modelo não-padrão:** não implementado. Nenhum requisito pede, e a
+   observabilidade do projeto é a saída do operador ao encerrar, que ainda não existe. A
+   ressalva foi para o `README.md`, onde o operador lê antes de trocar.
+
+**Validação de tipo por `isascii() and isdecimal()`, não `try/except int()`.** Três
+armadilhas fechadas, todas verificadas: `"²"` passa em `isdecimal()` e faria `int()`
+levantar o erro cru que AC5 proíbe; `"١٠"` passa e viraria `10` sem o operador reconhecer
+o valor; e acima de 4300 dígitos o próprio `int()` levanta `ValueError` sobre limite de
+conversão, sem nomear variável nem faixa — por isso o comprimento é conferido antes da
+conversão.
+
+**Duas mensagens de erro, não uma.** Tipo inválido e faixa estourada têm diagnósticos
+diferentes: quem escreveu `TAMANHO_LOTE=-3` informou um inteiro, e mandá-lo "informar um
+número inteiro" seria diagnóstico errado no caso mais provável.
+
+**`test_config_nunca_toca_na_credencial`.** AC6 era o critério mais sensível do lote e o
+único sem teste: a whitelist de imports permite `os`, então um
+`os.environ.get("GOOGLE_API_KEY")` entraria em `config.py` sem reprovar nada. O teste
+varre a fonte do módulo e confere os campos de `Config`.
+
+**Divergência documental resolvida como a story mandou:** só o `README.md` foi corrigido.
+`classificador.py:125` continua intacto — é código morto (o SDK já faz o fallback em
+`_api_client.py:101-117`) e a Story 3.1 depende do arquivo como está.
+
 ### File List
+
+**Novos**
+- `plataforma/config.py`
+- `tests/test_config.py`
+
+**Modificados**
+- `.env.example` — `TAMANHO_LOTE=` e `MODELO=` sem valor, CRLF preservado
+- `README.md` — `GOOGLE_API_KEY` no lugar de `GEMINI_API_KEY`; seção "Configuração"
+- `tests/test_contrato.py` — `config` na whitelist de imports; docstring reescrita
+- `tests/test_import_sem_credencial.py` — `plataforma.config` em `MODULOS`

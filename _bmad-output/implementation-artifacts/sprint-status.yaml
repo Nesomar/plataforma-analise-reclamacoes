@@ -51,7 +51,7 @@ development_status:
   # Epic 1: O operador roda a base e sabe se pode confiar no resultado
   epic-1: in-progress
   1-1-contrato-de-estado-e-catalogo-de-sinais: done
-  1-2-configuracao-validada-antes-de-qualquer-chamada-paga: ready-for-dev
+  1-2-configuracao-validada-antes-de-qualquer-chamada-paga: done
   1-3-ingestao-que-rejeita-base-invalida-antes-de-gastar: backlog
   1-4-verificacao-de-evidencia-deterministica: backlog
   1-5-analise-de-um-lote-pelo-modelo: backlog

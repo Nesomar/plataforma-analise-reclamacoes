@@ -3,7 +3,7 @@
 import importlib
 import sys
 
-MODULOS = ["plataforma.estado", "plataforma.catalogo"]
+MODULOS = ["plataforma.estado", "plataforma.catalogo", "plataforma.config"]
 
 
 def test_importa_sem_google_api_key(monkeypatch):
@@ -17,7 +17,7 @@ def test_importa_sem_google_api_key(monkeypatch):
         assert modulo.__name__ == nome, f"AD-12: importou {modulo.__name__} no lugar de {nome}"
 
 
-def test_nenhum_dos_dois_arrasta_o_sdk(monkeypatch):
+def test_nenhum_modulo_folha_arrasta_o_sdk(monkeypatch):
     # AD-7: só analise.py pode importar google.genai, direta ou transitivamente.
     for nome in list(sys.modules):
         if nome.startswith(("google", "plataforma")):
