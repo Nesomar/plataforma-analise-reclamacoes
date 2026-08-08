@@ -2,8 +2,9 @@
 title: 'Story 1.3 — Ingestão que rejeita base inválida antes de gastar'
 type: 'feature'
 created: '2026-08-08'
-status: 'in-review'
+status: 'done'
 baseline_revision: 'decb05d'
+final_revision: '876c80f'
 review_loop_iteration: 0
 followup_review_recommended: false
 context:
