@@ -2,10 +2,11 @@
 title: 'Story 1.5 — Análise de um lote pelo modelo'
 type: 'feature'
 created: '2026-08-08'
-status: 'in-review'
+status: 'done'
 baseline_revision: '738aa22'
+final_revision: '29206f9'
 review_loop_iteration: 1
-followup_review_recommended: false
+followup_review_recommended: true
 context:
   - '{project-root}/_bmad-output/project-context.md'
   - '{project-root}/_bmad-output/implementation-artifacts/1-5-analise-de-um-lote-pelo-modelo.md'
