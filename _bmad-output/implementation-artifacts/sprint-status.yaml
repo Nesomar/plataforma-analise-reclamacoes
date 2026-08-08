@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-08-06
-last_updated: 2026-08-07
+last_updated: 2026-08-08
 project: plataforma-analise-reclamacoes
 project_key: NOKEY
 tracking_system: file-system
@@ -52,7 +52,7 @@ development_status:
   epic-1: in-progress
   1-1-contrato-de-estado-e-catalogo-de-sinais: done
   1-2-configuracao-validada-antes-de-qualquer-chamada-paga: done
-  1-3-ingestao-que-rejeita-base-invalida-antes-de-gastar: backlog
+  1-3-ingestao-que-rejeita-base-invalida-antes-de-gastar: done
   1-4-verificacao-de-evidencia-deterministica: backlog
   1-5-analise-de-um-lote-pelo-modelo: backlog
   1-6-fan-out-por-lote-com-falha-absorvida: backlog
