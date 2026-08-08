@@ -2,8 +2,9 @@
 title: 'Story 1.4 — Verificação de evidência determinística'
 type: 'feature'
 created: '2026-08-08'
-status: 'in-review'
+status: 'done'
 baseline_revision: '905c888'
+final_revision: 'dd1c163'
 review_loop_iteration: 0
 followup_review_recommended: false
 context:
