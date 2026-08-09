@@ -8,17 +8,40 @@ montagem de `Falha`) mora em `_montar_delta`, pura. Essa separação não é est
 que torna a story testável, já que o repositório proíbe mock do `google.genai` — a
 única forma de exercitar "resposta incompleta" ou "fora do schema" é alimentar
 `_montar_delta` com uma lista fabricada ou `None`, nunca uma resposta HTTP de verdade.
+
+**Retry de falha de transporte vive aqui dentro (Story 1.6, revisão de 2026-08-08),
+não em `retry_policy`/`error_handler` do LangGraph.** Investigação empírica contra
+`langgraph==1.2.10` mostrou que `error_handler` roda mas não impede a exceção original
+de abortar o `.invoke()` inteiro quando há mais de uma task concorrente no mesmo step
+— exatamente o caso do fan-out via `Send` que a Story 1.6 implementa. Testado em 6
+configurações (invoke puro, com checkpointer, `durability=sync/exit`, `.stream()`),
+todas com o mesmo resultado; só o caso de nó único sem concorrência funciona como a
+documentação descreve. Isso diverge da leitura original de AD-9 ("o código do nó não
+tem laço de repetição próprio") — divergência ratificada nesta story porque o mecanismo
+que AD-9 presumia (`retry_policy` do LangGraph) não entrega o que promete nesta
+topologia. `analisar_lote` nunca deixa exceção escapar: qualquer falha de transporte,
+depois de esgotado `_chamar_com_retry`, vira `Falha` como retorno normal, nunca
+propaga — é assim que "os demais lotes seguem executando normalmente" (AC3 da Story
+1.6) se torna verdade na prática, e não só na introspecção estrutural do grafo.
 """
 
 import json
-from typing import Literal
+import time
+from typing import Callable, Literal, TypeVar
 
 from google import genai
+from google.genai import errors as genai_errors
 from google.genai import types
 from pydantic import BaseModel
 
 from plataforma import catalogo, config, evidencia
 from plataforma.estado import Analise, Falha, Reclamacao, Sinal
+
+_T = TypeVar("_T")
+
+_TENTATIVAS = 3
+_ESPERA_INICIAL_S = 0.5
+_FATOR_BACKOFF = 2.0
 
 
 class _SinalResposta(BaseModel):
@@ -82,28 +105,77 @@ def _montar_instrucao() -> str:
     return "\n".join(linhas)
 
 
+def _deve_repetir(erro: Exception) -> bool:
+    """Só repete falha de transporte de verdade — nunca falha permanente (AD-9, AC4).
+
+    `ClientError` (4xx) cobre de credencial inválida (401, permanente — repetir é só
+    desperdiçar `_TENTATIVAS` com backoff) a limite de taxa (429, transitório — é
+    exatamente o caso que AC4 pede para repetir). `ServerError` (5xx) e erro de conexão
+    são sempre transitórios. Qualquer outra exceção é tratada como permanente por
+    padrão — repetir um erro desconhecido às cegas é mais perigoso que falhar rápido.
+    """
+    if isinstance(erro, genai_errors.ServerError):
+        return True
+    if isinstance(erro, genai_errors.ClientError):
+        return erro.code == 429
+    return isinstance(erro, (ConnectionError, TimeoutError, OSError))
+
+
+def _chamar_com_retry(chamar: Callable[[], _T]) -> _T:
+    """Repete `chamar()` com backoff exponencial, só para falha classificada como transitória.
+
+    Pura o bastante para testar sem SDK: `chamar` é injetado pelo chamador, então o
+    teste passa uma função fabricada que levanta um número controlado de vezes, nunca
+    uma chamada de rede de verdade. Na última tentativa, ou diante de erro não-repetível,
+    a exceção sobe para `analisar_lote` decidir o que fazer (aqui, sempre absorver).
+    """
+    espera = _ESPERA_INICIAL_S
+    for tentativa in range(1, _TENTATIVAS + 1):
+        try:
+            return chamar()
+        except Exception as erro:
+            if tentativa == _TENTATIVAS or not _deve_repetir(erro):
+                raise
+            time.sleep(espera)
+            espera *= _FATOR_BACKOFF
+
+
 def analisar_lote(lote: list[Reclamacao]) -> dict:
     """Chama o modelo sobre `lote` e devolve o delta `{"analises": ..., "falhas": ...}`.
 
-    Falha de transporte (rede, limite de taxa) propaga daqui — não há `try/except`
-    genérico em volta de `generate_content`; `retry_policy`/`error_handler` no nó do
-    grafo (Story 1.6) são quem tratam isso (AD-9). O único desvio tratado aqui é de
-    conteúdo: resposta que não casa com `response_schema`.
+    Nunca deixa exceção escapar (ver docstring do módulo — o motivo é empírico, não
+    estético). Falha de transporte, depois de `_chamar_com_retry` esgotar as tentativas
+    ou encontrar erro permanente, vira `Falha` cobrindo o lote inteiro, no mesmo formato
+    que o desvio de conteúdo (`response.parsed is None`) já usava.
     """
     if not lote:
         return {"analises": [], "falhas": []}
 
-    cliente = genai.Client()
-    resposta = cliente.models.generate_content(
-        model=config.carregar().modelo,
-        contents=json.dumps(_montar_payload(lote), ensure_ascii=False),
-        config=types.GenerateContentConfig(
-            system_instruction=_montar_instrucao(),
-            response_mime_type="application/json",
-            response_schema=_LoteResposta,
-            temperature=0,
-        ),
-    )
+    def _gerar():
+        cliente = genai.Client()
+        return cliente.models.generate_content(
+            model=config.carregar().modelo,
+            contents=json.dumps(_montar_payload(lote), ensure_ascii=False),
+            config=types.GenerateContentConfig(
+                system_instruction=_montar_instrucao(),
+                response_mime_type="application/json",
+                response_schema=_LoteResposta,
+                temperature=0,
+            ),
+        )
+
+    try:
+        resposta = _chamar_com_retry(_gerar)
+    except Exception as erro:
+        return {
+            "analises": [],
+            "falhas": [Falha(
+                ids=[r["id"] for r in lote],
+                causa=str(erro) or type(erro).__name__,
+                no="analisar_lote",
+            )],
+        }
+
     analises_modelo = resposta.parsed.analises if resposta.parsed else None
     return _montar_delta(lote, analises_modelo)
 

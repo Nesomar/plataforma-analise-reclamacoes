@@ -1,13 +1,20 @@
-"""Cobre `_montar_payload` e `_montar_delta`: toda a I/O Matrix é exercitada sem
-tocar o SDK — nenhum teste chama `generate_content` nem constrói `genai.Client()`.
+"""Cobre `_montar_payload`, `_montar_delta`, `_deve_repetir` e `_chamar_com_retry`:
+toda a I/O Matrix é exercitada sem tocar o SDK — nenhum teste chama `generate_content`
+nem constrói `genai.Client()`.
 
 O repositório proíbe mock do `google.genai` (project-context.md), então a única forma
 de testar resposta incompleta, id repetido/inventado, ou schema fora do padrão é
 alimentar `_montar_delta` diretamente com `list[_AnaliseResposta] | None` fabricado à
-mão, nunca uma resposta HTTP de verdade.
+mão, nunca uma resposta HTTP de verdade. O mesmo vale para o retry: `_chamar_com_retry`
+recebe uma função fabricada como `chamar`, nunca uma chamada de rede real — é assim que
+o mecanismo de absorção de falha de transporte (Story 1.6, revisão de 2026-08-08) é
+testado sem precisar simular o SDK.
 """
 
 from pathlib import Path
+
+import pytest
+from google.genai import errors as genai_errors
 
 from plataforma import analise, catalogo
 from plataforma.estado import Reclamacao
@@ -114,6 +121,60 @@ def test_analisar_lote_com_lote_vazio_nao_chama_o_modelo():
     # dá para chamar analisar_lote([]) direto no teste sem violar a proibição de
     # mock do SDK: nenhuma linha que toca a rede chega a executar.
     assert analise.analisar_lote([]) == {"analises": [], "falhas": []}
+
+
+@pytest.mark.parametrize("erro, esperado", [
+    (genai_errors.ServerError(500, {}, None), True),
+    (genai_errors.ClientError(429, {}, None), True),
+    (genai_errors.ClientError(401, {}, None), False),
+    (genai_errors.ClientError(400, {}, None), False),
+    (ConnectionError("conexão recusada"), True),
+    (TimeoutError("tempo esgotado"), True),
+    (ValueError("erro de programação, não de transporte"), False),
+])
+def test_deve_repetir_classifica_transitorio_versus_permanente(erro, esperado):
+    assert analise._deve_repetir(erro) is esperado, \
+        f"AD-9/AC4: {type(erro).__name__}({getattr(erro, 'code', '')}) deveria repetir={esperado}"
+
+
+def test_chamar_com_retry_repete_ate_ter_sucesso(monkeypatch):
+    monkeypatch.setattr(analise.time, "sleep", lambda _: None)  # backoff real deixaria o teste lento
+    tentativas = {"n": 0}
+
+    def chamar():
+        tentativas["n"] += 1
+        if tentativas["n"] < 3:
+            raise genai_errors.ServerError(503, {}, None)
+        return "ok"
+
+    resultado = analise._chamar_com_retry(chamar)
+    assert resultado == "ok"
+    assert tentativas["n"] == 3, "deveria ter tentado 3 vezes até o sucesso"
+
+
+def test_chamar_com_retry_nao_repete_erro_permanente():
+    tentativas = {"n": 0}
+
+    def chamar():
+        tentativas["n"] += 1
+        raise genai_errors.ClientError(401, {}, None)
+
+    with pytest.raises(genai_errors.ClientError):
+        analise._chamar_com_retry(chamar)
+    assert tentativas["n"] == 1, "erro permanente não deveria repetir nenhuma vez"
+
+
+def test_chamar_com_retry_esgota_tentativas_e_levanta_a_ultima_excecao(monkeypatch):
+    monkeypatch.setattr(analise.time, "sleep", lambda _: None)
+    tentativas = {"n": 0}
+
+    def chamar():
+        tentativas["n"] += 1
+        raise genai_errors.ServerError(503, {}, None)
+
+    with pytest.raises(genai_errors.ServerError):
+        analise._chamar_com_retry(chamar)
+    assert tentativas["n"] == analise._TENTATIVAS
 
 
 def test_somente_analise_importa_o_sdk_do_modelo():

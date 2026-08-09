@@ -55,7 +55,7 @@ development_status:
   1-3-ingestao-que-rejeita-base-invalida-antes-de-gastar: done
   1-4-verificacao-de-evidencia-deterministica: done
   1-5-analise-de-um-lote-pelo-modelo: done
-  1-6-fan-out-por-lote-com-falha-absorvida: backlog
+  1-6-fan-out-por-lote-com-falha-absorvida: done
   1-7-as-quatro-contagens-do-operador: backlog
   epic-1-retrospective: optional
 
