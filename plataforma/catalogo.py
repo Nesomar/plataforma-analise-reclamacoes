@@ -1,9 +1,15 @@
-"""Fonte única dos códigos de sinal, do grupo saturado e dos termos genéricos de produto.
+"""Fonte única dos códigos de sinal, dos pesos, do grupo saturado e dos termos genéricos.
 
 As definições não são comentário: são dado que `analise.py` injeta no prompt. Definição
 escrita com exemplo dentro do prompt é o fator de maior impacto medido na acurácia
 (risk-signals.md), por isso o texto vive aqui e não espalhado em f-string de prompt.
-Os pesos ficam em `pontuacao.py`, com estas mesmas strings como chave.
+
+**O peso de cada código também vive aqui, não em `pontuacao.py` (Story 2.1, corrigido
+em revisão).** AD-18 proíbe código de sinal como literal solto em `pontuacao.py`; um
+`PESOS = {"dinheiro_retido": 3, ...}` declarado lá reintroduz exatamente o literal que
+`tests/test_catalogo.py::test_nenhum_outro_modulo_declara_codigo_de_sinal_como_literal`
+existe para pegar — e pegou. `pontuacao.py` só lê `catalogo.CATALOGO[codigo]["peso"]`,
+nunca escreve o nome do código de novo.
 """
 
 import unicodedata
@@ -37,6 +43,7 @@ _CATALOGO = {
             "ou saindo do bolso dele agora?"
         ),
         "exemplo": "cancelei a compra há 40 dias e até hoje não recebi o estorno de R$ 890",
+        "peso": 3,
     },
     # Os quatro códigos abaixo têm descrição de uma linha em risk-signals.md e nada
     # mais. A definição reproduz essa linha; só o exemplo é escrito aqui. Restringir
@@ -47,6 +54,7 @@ _CATALOGO = {
             "protocolo ou rastreio."
         ),
         "exemplo": "consta como entregue no dia 12, mas o rastreio BR8842 mostra devolvido ao remetente",
+        "peso": 2,
     },
     "dano_continuado": {
         "definicao": (
@@ -54,10 +62,12 @@ _CATALOGO = {
             "se repete a cada ciclo, serviço pago e indisponível de forma contínua."
         ),
         "exemplo": "já é o terceiro mês que a mensalidade é debitada mesmo com o plano cancelado",
+        "peso": 2,
     },
     "prazo_estourado": {
         "definicao": "Prazo legal ou prometido pela própria empresa já vencido.",
         "exemplo": "prometeram solução em 5 dias úteis, já se passaram 21 dias e nada",
+        "peso": 1,
     },
     # Texto de classificador.py:69-73, incluindo a exclusão de retórica, que é parte
     # da regra medida e não acréscimo.
@@ -68,6 +78,7 @@ _CATALOGO = {
             "'isso é fraude', 'exijo' são retórica, não anúncio de ação."
         ),
         "exemplo": "se não for resolvido em 5 dias vou procurar meus direitos no Procon",
+        "peso": 3,  # grupo A, satura com lei_citada — ver GRUPO_SINAL_A
     },
     "lei_citada": {
         "definicao": (
@@ -75,6 +86,7 @@ _CATALOGO = {
             "ressarcimento em dobro."
         ),
         "exemplo": "pelo artigo 42 do CDC tenho direito à devolução em dobro do valor cobrado",
+        "peso": 3,  # grupo A, satura com ameaca_explicita — ver GRUPO_SINAL_A
     },
 }
 
