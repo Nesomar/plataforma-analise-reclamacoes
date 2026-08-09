@@ -41,7 +41,8 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-08-06
-last_updated: 2026-08-08
+last_updated: 2026-08-09
+
 project: plataforma-analise-reclamacoes
 project_key: NOKEY
 tracking_system: file-system
@@ -62,7 +63,7 @@ development_status:
   # Epic 2: O gestor abre um arquivo e sabe o que atender primeiro
   epic-2: in-progress
   2-1-pontuacao-que-carrega-o-motivo-de-cada-item-da-fila: done
-  2-2-agregacao-que-fecha-com-a-contagem-direta: backlog
+  2-2-agregacao-que-fecha-com-a-contagem-direta: done
   2-3-relatorio-com-a-fila-no-topo-e-a-evidencia-a-vista: backlog
   2-4-graficos-embutidos-com-a-ressalva-ao-lado: backlog
   2-5-o-relatorio-declara-sua-propria-confiabilidade: backlog

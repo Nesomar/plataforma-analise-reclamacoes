@@ -22,7 +22,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Send
 
-from plataforma import analise, config, ingestao, pontuacao
+from plataforma import agregacao, analise, config, ingestao, pontuacao
 from plataforma.config import FAIXA_LOTE
 from plataforma.estado import Estado, Reclamacao
 
@@ -67,8 +67,7 @@ def _despachar(reclamacoes: list[Reclamacao], tamanho_lote: int) -> list[Send]:
 def _verificar_conservacao(estado: Estado) -> dict:
     """Conservação após o fan-out (AD-6): lidas == analisadas + soma das falhas.
 
-    Roda entre `analisar_lote` e `pontuar`. Quando `agregar` nascer (Story 2.2), a
-    aresta final de `pontuar` muda de `END` para lá — a asserção em si não muda.
+    Roda entre `analisar_lote` e `pontuar`.
     """
     lidas = len(estado["reclamacoes"])
     analisadas = len(estado["analises"])
@@ -80,12 +79,13 @@ def _verificar_conservacao(estado: Estado) -> dict:
 
 
 def construir_grafo(caminho: str) -> CompiledStateGraph:
-    """Monta o grafo: `carregar -> Send*N -> analisar_lote -> _verificar_conservacao -> pontuar -> END`.
+    """Monta o grafo: `carregar -> Send*N -> analisar_lote -> _verificar_conservacao -> pontuar -> agregar -> END`.
 
     Fábrica, não singleton: `caminho` vira closure do nó `carregar`, porque `Estado`
     não tem campo para ele. Nenhum `.invoke()` acontece aqui — quem invoca é `main.py`
-    (Story 1.7). `pontuar` (Story 2.1) não precisa de `retry_policy`/`error_handler`:
-    é síncrono, determinístico, sem chamada de rede — nada de transporte para absorver.
+    (Story 1.7). `pontuar` (Story 2.1) e `agregar` (Story 2.2) não precisam de
+    `retry_policy`/`error_handler`: são síncronos, determinísticos, sem chamada de
+    rede — nada de transporte para absorver.
     """
     def carregar(estado: Estado) -> dict:
         return {"reclamacoes": ingestao.carregar(caminho)}
@@ -98,11 +98,13 @@ def construir_grafo(caminho: str) -> CompiledStateGraph:
     grafo.add_node("analisar_lote", analise.analisar_lote)
     grafo.add_node("_verificar_conservacao", _verificar_conservacao)
     grafo.add_node("pontuar", pontuacao.pontuar)
+    grafo.add_node("agregar", agregacao.agregar)
 
     grafo.add_edge(START, "carregar")
     grafo.add_conditional_edges("carregar", despachar)
     grafo.add_edge("analisar_lote", "_verificar_conservacao")
     grafo.add_edge("_verificar_conservacao", "pontuar")
-    grafo.add_edge("pontuar", END)
+    grafo.add_edge("pontuar", "agregar")
+    grafo.add_edge("agregar", END)
 
     return grafo.compile()
