@@ -178,9 +178,11 @@ def test_chamar_com_retry_esgota_tentativas_e_levanta_a_ultima_excecao(monkeypat
 
 
 def test_somente_analise_importa_o_sdk_do_modelo():
-    """AD-7, em todo o pacote: analise.py é o único módulo que pode importar google.genai."""
+    """AD-7, em todo o pacote e em main.py: só analise.py pode importar google.genai."""
     pacote = Path(analise.__file__).parent
-    for arquivo in pacote.glob("*.py"):
+    raiz = pacote.parent
+    arquivos = list(pacote.glob("*.py")) + [raiz / "main.py"]
+    for arquivo in arquivos:
         if arquivo.name in {"analise.py", "__init__.py"}:
             continue
         fonte = arquivo.read_text(encoding="utf-8")
