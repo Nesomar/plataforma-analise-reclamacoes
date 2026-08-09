@@ -17,13 +17,19 @@ def test_seis_codigos_exatos():
         f"AC5: catálogo declara {sorted(catalogo.CATALOGO)}"
 
 
-def test_cada_codigo_tem_definicao_e_exemplo_escritos():
+def test_cada_codigo_tem_definicao_exemplo_e_peso():
+    # "peso" entrou na Story 2.1: pontuacao.py deriva PESOS daqui em vez de retipar o
+    # código como literal (AD-18) — ver docstring de plataforma/pontuacao.py.
     for codigo, entrada in catalogo.CATALOGO.items():
-        assert set(entrada) == {"definicao", "exemplo"}, \
+        assert set(entrada) == {"definicao", "exemplo", "peso"}, \
             f"AC5: {codigo} tem chaves {sorted(entrada)}"
-        for chave, texto in entrada.items():
+        for chave in ("definicao", "exemplo"):
+            texto = entrada[chave]
             assert isinstance(texto, str) and texto.strip(), \
                 f"AC5: {codigo}.{chave} não é texto escrito: {texto!r}"
+        peso = entrada["peso"]
+        assert type(peso) is int and peso > 0, \
+            f"{codigo}.peso deveria ser um inteiro positivo: {peso!r}"
 
 
 def test_dinheiro_retido_cobre_as_seis_categorias_do_gabarito():

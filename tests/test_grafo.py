@@ -93,7 +93,7 @@ def test_construir_grafo_tem_os_nos_esperados_sem_invocar():
     # for invocado, o caminho só vira closure do nó "carregar".
     compilado = grafo.construir_grafo("caminho-nao-usado-neste-teste.csv")
     nos = compilado.builder.nodes
-    for esperado in ("carregar", "analisar_lote", "_verificar_conservacao"):
+    for esperado in ("carregar", "analisar_lote", "_verificar_conservacao", "pontuar", "agregar"):
         assert esperado in nos, f"nó {esperado!r} deveria existir no grafo compilado"
 
 
@@ -104,6 +104,15 @@ def test_construir_grafo_analisar_lote_sem_retry_policy_nem_error_handler():
     # antigo (quebrado) — não um "reforço" acidental.
     compilado = grafo.construir_grafo("caminho-nao-usado-neste-teste.csv")
     spec = compilado.builder.nodes["analisar_lote"]
+    assert spec.retry_policy is None
+    assert spec.error_handler_node is None
+
+
+def test_construir_grafo_agregar_sem_retry_policy_nem_error_handler():
+    # agregar (Story 2.2), como pontuar, é síncrono e determinístico — nada de
+    # transporte para absorver.
+    compilado = grafo.construir_grafo("caminho-nao-usado-neste-teste.csv")
+    spec = compilado.builder.nodes["agregar"]
     assert spec.retry_policy is None
     assert spec.error_handler_node is None
 

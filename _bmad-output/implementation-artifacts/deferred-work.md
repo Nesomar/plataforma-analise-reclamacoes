@@ -34,3 +34,12 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-4-verificacao-de-evidencia-deterministica.md`
   summary: O piso de "cinco palavras" é `len(citacao.split()) >= 5`, que conta fragmentos como `"R$"` e `"890"` como palavra inteira — uma citação pode cruzar o piso com números/moeda em vez de cinco palavras de contexto real.
   evidence: Nenhuma AC ou documento define "palavra" com mais precisão que a contagem por espaço em branco, e o risco é de baixa probabilidade (exige citação curta padded com fragmentos numéricos). Vale reavaliar se M-1/M-2 (Épico 3) revelarem citações que passam no piso sem sustentar o sinal de fato.
+
+## Deferred from: code review of 2-2-agregacao-que-fecha-com-a-contagem-direta (2026-08-09)
+
+- source_spec: `_bmad-output/implementation-artifacts/2-2-agregacao-que-fecha-com-a-contagem-direta.md`
+  summary: `_fila_ordenada` levanta `KeyError` cru se `Pontuacao.id` não existir em `reclamacoes_por_id`.
+  evidence: Mesmo padrão de risco já presente em `plataforma/pontuacao.py` desde a Story 2.1 (`reclamacoes_por_id[analise["id"]]`), não introduzido por esta story. `main.py` embrulha `invoke()` inteiro num `except Exception` genérico, então uma violação de invariante apareceria ao operador como `"encerrado: 'R99'"` — indistinguível de erro comum de entrada. Reavaliar junto de um tratamento de erro mais específico em `main.py`, se um dia for pedido.
+- source_spec: `_bmad-output/implementation-artifacts/2-2-agregacao-que-fecha-com-a-contagem-direta.md`
+  summary: Nenhum teste trava `agregacao._contar_codigos` em sincronia com `main._contar_codigos_derrubados` — as duas funções replicam a mesma semântica de contagem por decisão consciente (ver Dev Notes da Story 2.2), sem import cruzado.
+  evidence: Um teste de sincronia exigiria acoplar os dois módulos ou duplicar a fixture entre `tests/test_agregacao.py` e `tests/test_main.py`, o que a própria story rejeitou para não inverter a dependência entrypoint↔filtro. Reavaliar quando `main.py` for religado para ler `agregados` em vez de recalcular (candidato: perto da Story 2.6).
