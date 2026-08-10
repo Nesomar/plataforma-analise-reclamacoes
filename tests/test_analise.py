@@ -177,6 +177,41 @@ def test_chamar_com_retry_esgota_tentativas_e_levanta_a_ultima_excecao(monkeypat
     assert tentativas["n"] == analise._TENTATIVAS
 
 
+def test_registrar_tentativa_soma_chamada_mesmo_sem_resposta():
+    analise.resetar_metricas()
+    analise._registrar_tentativa()
+    analise._registrar_tentativa()
+    assert analise.ler_metricas()["chamadas"] == 2
+    assert analise.ler_metricas()["tokens_entrada"] == 0, \
+        "tentativa sem resposta não deveria somar token nenhum"
+    analise.resetar_metricas()
+
+
+def test_registrar_tokens_soma_a_partir_de_usage_metadata_fabricado():
+    class _UsoFake:
+        prompt_token_count = 100
+        candidates_token_count = 40
+
+    class _RespostaFake:
+        usage_metadata = _UsoFake()
+
+    analise.resetar_metricas()
+    analise._registrar_tokens(_RespostaFake())
+    metricas = analise.ler_metricas()
+    assert metricas["tokens_entrada"] == 100
+    assert metricas["tokens_saida"] == 40
+    analise.resetar_metricas()
+
+
+def test_registrar_tokens_sem_usage_metadata_nao_levanta():
+    class _RespostaSemUso:
+        usage_metadata = None
+
+    analise.resetar_metricas()
+    analise._registrar_tokens(_RespostaSemUso())  # não deveria levantar AttributeError
+    assert analise.ler_metricas() == {"chamadas": 0, "tokens_entrada": 0, "tokens_saida": 0}
+
+
 def test_somente_analise_importa_o_sdk_do_modelo():
     """AD-7, em todo o pacote e em main.py: só analise.py pode importar google.genai."""
     pacote = Path(analise.__file__).parent
