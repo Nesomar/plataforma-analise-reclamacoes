@@ -61,13 +61,13 @@ development_status:
   epic-1-retrospective: optional
 
   # Epic 2: O gestor abre um arquivo e sabe o que atender primeiro
-  epic-2: in-progress
+  epic-2: done
   2-1-pontuacao-que-carrega-o-motivo-de-cada-item-da-fila: done
   2-2-agregacao-que-fecha-com-a-contagem-direta: done
-  2-3-relatorio-com-a-fila-no-topo-e-a-evidencia-a-vista: backlog
-  2-4-graficos-embutidos-com-a-ressalva-ao-lado: backlog
-  2-5-o-relatorio-declara-sua-propria-confiabilidade: backlog
-  2-6-o-arquivo-entregue-nasce-seguro-e-autocontido: backlog
+  2-3-relatorio-com-a-fila-no-topo-e-a-evidencia-a-vista: done
+  2-4-graficos-embutidos-com-a-ressalva-ao-lado: done
+  2-5-o-relatorio-declara-sua-propria-confiabilidade: done
+  2-6-o-arquivo-entregue-nasce-seguro-e-autocontido: done
   epic-2-retrospective: optional
 
   # Epic 3: A fila prova que acerta e o grafo prova que e extensivel

@@ -14,7 +14,7 @@ versão). O retry e a absorção de falha de transporte agora vivem dentro de
 import pytest
 
 from plataforma import grafo
-from plataforma.estado import Analise, Falha, Reclamacao
+from plataforma.estado import Agregados, Analise, DistribuicaoSentimento, Falha, Reclamacao
 
 
 def reclamacao(id_):
@@ -91,9 +91,9 @@ def test_verificar_conservacao_levanta_quando_soma_nao_bate():
 def test_construir_grafo_tem_os_nos_esperados_sem_invocar():
     # Caminho fictício de propósito: construir_grafo() não abre o arquivo enquanto não
     # for invocado, o caminho só vira closure do nó "carregar".
-    compilado = grafo.construir_grafo("caminho-nao-usado-neste-teste.csv")
+    compilado = grafo.construir_grafo("caminho-nao-usado-neste-teste.csv", "relatorio-nao-usado-neste-teste.html")
     nos = compilado.builder.nodes
-    for esperado in ("carregar", "analisar_lote", "_verificar_conservacao", "pontuar", "agregar"):
+    for esperado in ("carregar", "analisar_lote", "_verificar_conservacao", "pontuar", "agregar", "renderizar"):
         assert esperado in nos, f"nó {esperado!r} deveria existir no grafo compilado"
 
 
@@ -102,7 +102,7 @@ def test_construir_grafo_analisar_lote_sem_retry_policy_nem_error_handler():
     # versão, então analisar_lote se auto-protege e o nó não declara retry_policy nem
     # error_handler. Se isto voltar a aparecer aqui, é sinal de regressão ao desenho
     # antigo (quebrado) — não um "reforço" acidental.
-    compilado = grafo.construir_grafo("caminho-nao-usado-neste-teste.csv")
+    compilado = grafo.construir_grafo("caminho-nao-usado-neste-teste.csv", "relatorio-nao-usado-neste-teste.html")
     spec = compilado.builder.nodes["analisar_lote"]
     assert spec.retry_policy is None
     assert spec.error_handler_node is None
@@ -111,10 +111,55 @@ def test_construir_grafo_analisar_lote_sem_retry_policy_nem_error_handler():
 def test_construir_grafo_agregar_sem_retry_policy_nem_error_handler():
     # agregar (Story 2.2), como pontuar, é síncrono e determinístico — nada de
     # transporte para absorver.
-    compilado = grafo.construir_grafo("caminho-nao-usado-neste-teste.csv")
+    compilado = grafo.construir_grafo("caminho-nao-usado-neste-teste.csv", "relatorio-nao-usado-neste-teste.html")
     spec = compilado.builder.nodes["agregar"]
     assert spec.retry_policy is None
     assert spec.error_handler_node is None
+
+
+def test_construir_grafo_renderizar_sem_retry_policy_nem_error_handler():
+    # renderizar (Story 2.6) escreve em disco, mas é síncrono e determinístico — nada
+    # de transporte para absorver, mesmo raciocínio de pontuar/agregar.
+    compilado = grafo.construir_grafo("caminho-nao-usado-neste-teste.csv", "relatorio-nao-usado-neste-teste.html")
+    spec = compilado.builder.nodes["renderizar"]
+    assert spec.retry_policy is None
+    assert spec.error_handler_node is None
+
+
+def test_renderizar_escreve_html_utf8_e_devolve_caminho_html(tmp_path):
+    # `spec.runnable.invoke(estado)` chama o corpo do nó direto, sem passar pelo
+    # roteamento do grafo nem por analisar_lote — sem rede, sem credencial (AD-12).
+    destino = tmp_path / "relatorio-teste.html"
+    compilado = grafo.construir_grafo("caminho-nao-usado-neste-teste.csv", str(destino))
+    estado = {
+        "reclamacoes": [], "pontuacoes": [],
+        "agregados": Agregados(
+            data_execucao="2026-01-01", lidas=0, analisadas=0, nao_analisadas=0,
+            eventos_falha=0, codigos_propostos=0, codigos_derrubados=0,
+            fila=[], total_na_fila=0, ocupacao_fila=0.0, taxa_produto_nao_nomeado=0.0,
+            ranking_produtos=[],
+            distribuicao_sentimento=DistribuicaoSentimento(positivo=0, neutro=0, negativo=0),
+            degradado=False, motivo_degradacao=None,
+        ),
+    }
+    resultado = compilado.builder.nodes["renderizar"].runnable.invoke(estado)
+    assert resultado == {"caminho_html": str(destino)}
+    assert destino.exists()
+    assert destino.read_text(encoding="utf-8").startswith("<!doctype html>")
+    assert not destino.with_name(destino.name + ".tmp").exists(), \
+        "arquivo temporário deveria ter sido trocado pelo destino final (escrita atômica)"
+
+
+def test_rotear_apos_conservacao_vai_para_pontuar_quando_ha_analises():
+    estado = {"analises": [Analise(id="R1", sentimento="neutro", produto=None, sinais=[],
+                                    prazo_prometido_dias=None, data_evento=None)]}
+    assert grafo._rotear_apos_conservacao(estado) == "pontuar"
+
+
+def test_rotear_apos_conservacao_vai_para_end_quando_analises_vazio():
+    from langgraph.graph import END
+    estado = {"analises": []}
+    assert grafo._rotear_apos_conservacao(estado) == END
 
 
 def test_import_grafo_sem_credencial(monkeypatch):
