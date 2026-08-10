@@ -23,6 +23,17 @@ topologia. `analisar_lote` nunca deixa exceção escapar: qualquer falha de tran
 depois de esgotado `_chamar_com_retry`, vira `Falha` como retorno normal, nunca
 propaga — é assim que "os demais lotes seguem executando normalmente" (AC3 da Story
 1.6) se torna verdade na prática, e não só na introspecção estrutural do grafo.
+
+**Instrumentação pontual de custo (Story 3.2).** `_metricas` conta chamadas e tokens
+reais gastos com o modelo — não é campo de `Estado` porque não é dado de domínio, é
+contagem de infraestrutura que só a medição de M-4/NFR-3 lê. `chamadas` soma a cada
+tentativa real de `_gerar()`, sucesso ou não — a quota é gasta na chamada, não no
+resultado, e é por isso que `_registrar_tentativa()` roda **antes** de `generate_content`
+retornar (achado de revisão: contar só depois do sucesso nunca detectaria retry).
+`tokens_entrada`/`tokens_saida` só somam numa resposta bem-sucedida com
+`usage_metadata` — uma tentativa que falhou não tem tokens para contar, só a tentativa
+em si. `resetar_metricas()`/`ler_metricas()` são o único jeito de zerar/ler; nenhum nó
+do grafo escreve nem lê essas chaves.
 """
 
 import json
@@ -42,6 +53,42 @@ _T = TypeVar("_T")
 _TENTATIVAS = 3
 _ESPERA_INICIAL_S = 0.5
 _FATOR_BACKOFF = 2.0
+
+_metricas = {"chamadas": 0, "tokens_entrada": 0, "tokens_saida": 0}
+
+
+def ler_metricas() -> dict:
+    """Cópia de `_metricas` — nunca a referência, para quem lê não poder mutar."""
+    return dict(_metricas)
+
+
+def resetar_metricas() -> None:
+    """Zera os três contadores. Chamado pelo script de medição, nunca pelo pipeline."""
+    _metricas.update(chamadas=0, tokens_entrada=0, tokens_saida=0)
+
+
+def _registrar_tentativa() -> None:
+    """+1 chamada — a cada tentativa real de `generate_content`, sucesso ou não.
+
+    Separado de `_registrar_tokens` (achado de revisão): uma tentativa que falha
+    consome quota mesmo sem devolver `usage_metadata` — não há tokens para contar,
+    mas a chamada aconteceu e precisa contar como tal, senão `medir_tempo_custo.py`
+    nunca detecta retry de transporte (a contagem de chamadas nunca excederia o
+    número de lotes emitidos).
+    """
+    _metricas["chamadas"] += 1
+
+
+def _registrar_tokens(resposta) -> None:
+    """Soma tokens de uma resposta bem-sucedida. `usage_metadata` pode faltar
+    (guard, achado de revisão) — nesse caso não há o que somar, mas isso não é
+    motivo para levantar `AttributeError` e transformar uma chamada boa em `Falha`.
+    """
+    uso = getattr(resposta, "usage_metadata", None)
+    if uso is None:
+        return
+    _metricas["tokens_entrada"] += uso.prompt_token_count or 0
+    _metricas["tokens_saida"] += uso.candidates_token_count or 0
 
 
 class _SinalResposta(BaseModel):
@@ -152,8 +199,9 @@ def analisar_lote(lote: list[Reclamacao]) -> dict:
         return {"analises": [], "falhas": []}
 
     def _gerar():
+        _registrar_tentativa()  # antes da chamada: quota é gasta mesmo se ela falhar
         cliente = genai.Client()
-        return cliente.models.generate_content(
+        resposta = cliente.models.generate_content(
             model=config.carregar().modelo,
             contents=json.dumps(_montar_payload(lote), ensure_ascii=False),
             config=types.GenerateContentConfig(
@@ -163,6 +211,8 @@ def analisar_lote(lote: list[Reclamacao]) -> dict:
                 temperature=0,
             ),
         )
+        _registrar_tokens(resposta)
+        return resposta
 
     try:
         resposta = _chamar_com_retry(_gerar)
