@@ -43,3 +43,30 @@
 - source_spec: `_bmad-output/implementation-artifacts/2-2-agregacao-que-fecha-com-a-contagem-direta.md`
   summary: Nenhum teste trava `agregacao._contar_codigos` em sincronia com `main._contar_codigos_derrubados` — as duas funções replicam a mesma semântica de contagem por decisão consciente (ver Dev Notes da Story 2.2), sem import cruzado.
   evidence: Um teste de sincronia exigiria acoplar os dois módulos ou duplicar a fixture entre `tests/test_agregacao.py` e `tests/test_main.py`, o que a própria story rejeitou para não inverter a dependência entrypoint↔filtro. Reavaliar quando `main.py` for religado para ler `agregados` em vez de recalcular (candidato: perto da Story 2.6).
+
+## Deferred from: code review of 2-3-relatorio-com-a-fila-no-topo-e-a-evidencia-a-vista (2026-08-09)
+
+- source_spec: `_bmad-output/implementation-artifacts/2-3-relatorio-com-a-fila-no-topo-e-a-evidencia-a-vista.md`
+  summary: `_itens_fila` faz `pontuacoes_por_id[id_]`/`reclamacoes_por_id[id_]` sem guarda contra um id de `agregados["fila"]` ausente ou duplicado nos mapas.
+  evidence: Mesmo padrão de risco já aceito em `agregacao._fila_ordenada` desde a Story 2.2 (que por sua vez replica o padrão de `pontuacao.py` desde a Story 2.1) — sustentado pela conservação AD-6 (`lidas == analisadas + afetadas`) e por `pontuar` produzir exatamente uma `Pontuacao` por `Analise` (AD-19). Reavaliar junto do mesmo tratamento de erro mais específico em `main.py` cogitado na Story 2.2, se um dia for pedido.
+
+## Deferred from: code review of 2-6-o-arquivo-entregue-nasce-seguro-e-autocontido (2026-08-09)
+
+- source_spec: `_bmad-output/implementation-artifacts/2-6-o-arquivo-entregue-nasce-seguro-e-autocontido.md`
+  summary: Corrida TOCTOU entre o cheque de existência do arquivo de saída (antes de `.invoke()`, que pode levar minutos com chamadas pagas) e a escrita de fato dentro do nó `renderizar` — duas execuções concorrentes, ou um arquivo criado durante a execução, passariam pelo cheque sem erro.
+  evidence: Ferramenta de linha de comando de operador único, sem requisito de concorrência ou agendamento em nenhuma AC/NFR do projeto. Reavaliar se execução concorrente ou agendada (cron, pipeline CI) virar requisito real.
+- source_spec: `_bmad-output/implementation-artifacts/2-6-o-arquivo-entregue-nasce-seguro-e-autocontido.md`
+  summary: O cheque prévio de sobrescrita só verifica existência do arquivo, não gravabilidade — diretório sem permissão de escrita ou arquivo travado por outro processo só falha dentro de `renderizar`, depois das chamadas pagas já terem acontecido.
+  evidence: Cobrir esse caso plenamente exigiria sondar gravabilidade sem efeito colateral (ex.: abrir e fechar o arquivo, checar permissão do diretório), complexidade não pedida por nenhuma AC. Baixa probabilidade prática — o diretório já é o mesmo onde o CSV de entrada vive e foi lido com sucesso.
+
+## Deferred from: code review of 2-4-graficos-embutidos-com-a-ressalva-ao-lado (2026-08-09)
+
+- source_spec: `_bmad-output/implementation-artifacts/2-4-graficos-embutidos-com-a-ressalva-ao-lado.md`
+  summary: `_barras_ranking` confia que `ranking_produtos` já chega ordenado por `total` decrescente, sem reverificar — a barra mais larga (100%) só está correta se essa ordem for honrada.
+  evidence: Mesma classe de confiança em invariante upstream já aceita para `_itens_fila` (Story 2.3) e `_fila_ordenada` (Story 2.2), sustentada por `agregacao._ranking_produtos` ordenar antes de devolver (AD-19/AD-22). Reavaliar se `agregacao.py` algum dia parar de garantir essa ordem.
+- source_spec: `_bmad-output/implementation-artifacts/2-4-graficos-embutidos-com-a-ressalva-ao-lado.md`
+  summary: A ressalva do ranking cita "produto"/"fatura" como exemplos de termo genérico, texto livre duplicando `catalogo.TERMOS_GENERICOS` sem vínculo executável.
+  evidence: Se a lista canônica de `catalogo.py` ganhar ou perder termos, a ressalva do template não acompanha automaticamente. Baixo risco — a lista muda por medição (ver `catalogo.py`), não por acaso. Reavaliar se `TERMOS_GENERICOS` for revisada.
+- source_spec: `_bmad-output/implementation-artifacts/2-4-graficos-embutidos-com-a-ressalva-ao-lado.md`
+  summary: `rotulo` do produto (texto livre do modelo) é renderizado em `<text>` de SVG sem tratamento de overflow ou quebra de linha para rótulos muito longos.
+  evidence: A base sintética atual não expõe nomes de produto longos o suficiente para extrapolar o `viewBox` de 320 unidades. Reavaliar se uma base real (Q-5 do SPEC) trouxer nomes de produto mais longos.

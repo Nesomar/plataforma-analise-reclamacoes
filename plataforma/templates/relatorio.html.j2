@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Relatório de Reclamações</title>
+</head>
+<body>
+<section id="fila-prioridade">
+  <h1>Fila de prioridade</h1>
+  {% if itens_fila %}
+  <ol>
+    {% for item in itens_fila %}
+    <li>
+      <p><strong>{{ item.empresa }}</strong> — {{ item.titulo }} ({{ item.data }}) — {{ item.pontos }} ponto(s)</p>
+      <ul class="motivos">
+        {% for motivo in item.motivos %}
+        <li>
+          {% if motivo.origem == "sinal" %}
+          <strong>{{ motivo.rotulo }}</strong>: “{{ motivo.citacao }}”
+          {% else %}
+          {{ motivo.rotulo }}
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <p>Nenhuma reclamação atingiu o corte de prioridade nesta execução.</p>
+  {% endif %}
+</section>
+<section id="confiabilidade">
+  <h1>Confiabilidade desta execução</h1>
+  <p>Execução de {{ cabecalho.data_execucao }} — {{ cabecalho.analisadas_rotulo }}, {{ cabecalho.nao_analisadas_rotulo }} por falha.</p>
+  {% if cabecalho.degradado %}
+  <p class="degradado">Execução degradada: {{ cabecalho.motivo_degradacao }}</p>
+  {% endif %}
+  <p class="ressalva">Ressalva: esta classificação de risco é uma heurística de engenharia baseada em sinais textuais — não constitui parecer jurídico nem substitui avaliação humana antes de qualquer decisão.</p>
+</section>
+<section id="distribuicao-sentimento">
+  <h1>Distribuição de sentimento</h1>
+  <div class="grafico-com-ressalva">
+    {# viewBox de 320; largura útil real é 300 (largura_pct 0-100 * 2 cabe em até 200 aqui) #}
+    <svg viewBox="0 0 320 {{ barras_sentimento|length * 30 }}" role="img" aria-label="Distribuição de sentimento">
+      {% for barra in barras_sentimento %}
+      <text x="0" y="{{ loop.index0 * 30 + 12 }}">{{ barra.rotulo }} ({{ barra.total }})</text>
+      <rect x="0" y="{{ loop.index0 * 30 + 16 }}" height="10" width="{{ (barra.largura_pct * 2)|round(1) }}"></rect>
+      {% endfor %}
+    </svg>
+    <p class="ressalva">Ressalva: este gráfico mostra o tom do texto recebido, não uma medida de satisfação geral dos clientes — a proporção entre categorias varia de base para base.</p>
+  </div>
+</section>
+<section id="ranking-produtos">
+  <h1>Ranking de produtos</h1>
+  <div class="grafico-com-ressalva">
+    {% if barras_ranking %}
+    {# viewBox de 320; largura útil real é 300 (largura_pct 0-100 * 3 cabe em até 300 aqui) #}
+    <svg viewBox="0 0 320 {{ barras_ranking|length * 30 }}" role="img" aria-label="Ranking de produtos">
+      {% for barra in barras_ranking %}
+      <text x="0" y="{{ loop.index0 * 30 + 12 }}">{{ barra.rotulo }} ({{ barra.total }}){% if barra.generico %} (termo genérico){% endif %}</text>
+      <rect x="0" y="{{ loop.index0 * 30 + 16 }}" height="10" width="{{ (barra.largura_pct * 3)|round(1) }}"></rect>
+      {% endfor %}
+    </svg>
+    {% else %}
+    <p>Nenhum produto identificado nesta execução.</p>
+    {% endif %}
+    <p class="ressalva">Ressalva: volume não equivale a gravidade. O produto mais reclamado tende a ser o mais vendido, não o mais problemático. Itens marcados como genéricos (ex.: "produto", "fatura") não identificam um item específico.</p>
+  </div>
+</section>
+</body>
+</html>
