@@ -74,5 +74,5 @@ development_status:
   epic-3: in-progress
   3-1-a-fila-do-pipeline-medida-contra-o-gabarito: done
   3-2-o-tempo-e-o-custo-de-uma-execucao-medidos: backlog
-  3-3-a-extensibilidade-do-grafo-demonstrada-por-diff: backlog
+  3-3-a-extensibilidade-do-grafo-demonstrada-por-diff: done
   epic-3-retrospective: optional
