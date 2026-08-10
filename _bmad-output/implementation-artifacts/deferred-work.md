@@ -70,3 +70,15 @@
 - source_spec: `_bmad-output/implementation-artifacts/2-4-graficos-embutidos-com-a-ressalva-ao-lado.md`
   summary: `rotulo` do produto (texto livre do modelo) é renderizado em `<text>` de SVG sem tratamento de overflow ou quebra de linha para rótulos muito longos.
   evidence: A base sintética atual não expõe nomes de produto longos o suficiente para extrapolar o `viewBox` de 320 unidades. Reavaliar se uma base real (Q-5 do SPEC) trouxer nomes de produto mais longos.
+
+## Correção de curso: precisão da fila abaixo do critério de M-1 (Story 3.1, 2026-08-10)
+
+- source_spec: `_bmad-output/implementation-artifacts/3-1-a-fila-do-pipeline-medida-contra-o-gabarito.md`
+  summary: Medição real de `medir_fila.py` contra `docs/gabarito.csv` (2026-08-10): precisão 88% (< critério de 95%), recall 79% (≥ 65%, passa). TP=15, FP=2, FN=4. Falsos positivos (pipeline pôs na fila, gabarito diz que não deveria): `RA333754555`, `RA607526654`. Falsos negativos (pipeline deixou fora, gabarito diz que deveria estar na fila): `RA283758720`, `RA497478786`, `RA678722458`, `RA821218382`.
+  evidence: Registrado como saiu, sem reajuste de limiar (regra do Épico 3 e AC3 da Story 3.1 — resultado abaixo do limiar abre correção de curso, não reprova a story). Próximo passo: inspecionar o texto original das 6 reclamações divergentes (2 FP + 4 FN, mapeamento acima) contra o motivo que o pipeline atribuiu (ou deixou de atribuir), para decidir se é ajuste de prompt/catálogo (`catalogo.py`) ou limitação aceitável da base sintética atual. Não mexer em pesos/corte de `pontuacao.py` sem essa investigação — moveria a métrica para caber no resultado, o que o Épico 3 proíbe explicitamente.
+
+## Deferred from: code review of 3-1-a-fila-do-pipeline-medida-contra-o-gabarito (2026-08-10)
+
+- source_spec: `_bmad-output/implementation-artifacts/3-1-a-fila-do-pipeline-medida-contra-o-gabarito.md`
+  summary: `medir_fila.py` não confere previamente que os conjuntos de `ID_Reclamacao` de `docs/gabarito.csv` e `docs/reclamacoes_reclameaqui.csv` coincidem.
+  evidence: Um id defasado ou digitado errado em qualquer um dos dois arquivos seria absorvido silenciosamente pela medição em vez de falhar alto. Risco residual menor depois do patch que fez `comparar` usar o gabarito como universo de ids (Story 3.1, achado de revisão) — o pior caso agora é subcontar/sobrecontar em vez de mascarar por completo. Reavaliar se os dois arquivos algum dia forem mantidos por pessoas ou processos diferentes.
