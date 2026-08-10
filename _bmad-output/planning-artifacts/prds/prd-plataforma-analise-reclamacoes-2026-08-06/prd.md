@@ -98,7 +98,7 @@ Quatro termos que este documento usa com sentido preciso e que se confundem com 
 
 ### 4.1 Desempenho
 
-- **NFR-1** — Uma execução sobre 50 reclamações completa em até 2 minutos, ponta a ponta. `[ASSUMPTION]` — teto não informado pelo usuário; derivado de 5 chamadas em lote de 10 com modelo rápido.
+- **NFR-1** — Uma execução sobre 50 reclamações completa em até 2 minutos, ponta a ponta. **Medido em 2026-08-10 (Story 3.2): 27,4s ponta a ponta, dentro do teto.** Ver Q-8 (§9.3).
 - **NFR-2** — O tamanho de lote é configurável sem alteração de código, para permitir calibragem contra limite de contexto e taxa de resposta incompleta.
 
 ### 4.2 Custo
@@ -206,7 +206,6 @@ Os não-objetivos do produto estão em `SPEC.md` e o faseamento em `roadmap.md`.
 ### 9.1 Em aberto
 
 - **Q-5 — Origem da base real. ADIADA em 2026-08-06.** Nada define de onde viria uma base real, em que formato, nem com que frequência. Não bloqueia o v1: o sistema já rejeita schema divergente antes de qualquer chamada paga (FR-3), então uma base real de formato desconhecido falha de forma segura. **Dono:** operador. **Revisitar quando:** houver uma base real candidata, ou quando o sistema precisar rodar mais de uma vez sobre bases diferentes.
-- **Q-8 — Aferição de NFR-1.** O teto de 2 minutos para 50 reclamações continua marcado `[ASSUMPTION]` — foi derivado de 5 chamadas em lote de 10, nunca cronometrado ponta a ponta. Uma execução medida resolve. **Dono:** operador. **Revisitar quando:** o pipeline completo existir; medir com o cache de análises desligado, ou o número mede o disco.
 
 ### 9.2 Resolvidas em 2026-08-06
 
@@ -216,3 +215,7 @@ Os não-objetivos do produto estão em `SPEC.md` e o faseamento em `roadmap.md`.
 - **Q-4 — ~~Parcelas não exercidas pela base~~.** As parcelas permanecem no código — ameaça explícita, dano continuado, registro contraditório — e cada uma ganha um caso de teste construído à mão que a exercita. Deixam de ser aposta na base real e passam a ser código coberto. O que o PRD declara em contrapartida: **nenhuma das três foi validada por dado real, e o teste sintético prova que o caminho executa, não que a heurística acerta.**
 - **Q-6 — ~~`Status` como parcela do score~~.** Medido contra o gabarito: `Status` sozinho tem F1 0,42, pior que a categoria do problema. Não vira parcela independente — entra como modificador negativo dentro da categoria certa.
 - **Q-7 — ~~Gabarito de aceitação~~.** `docs/gabarito.csv` v2, 19 de 50 marcadas por leitura manual cega. A v1 (18 marcações) está preservada em `docs/gabarito-v1.csv`; a revisão está justificada em `risk-signals.md`.
+
+### 9.3 Resolvidas em 2026-08-10
+
+- **Q-8 — ~~Aferição de NFR-1~~.** Pipeline completo (Story 2.6) executado ponta a ponta sobre as 50 reclamações de `docs/reclamacoes_reclameaqui.csv`, cronometrado com `time.perf_counter()` em `medir_tempo_custo.py` (Story 3.2). **27,4s**, bem dentro do teto de 2 minutos. Sem cache a desligar: o pipeline de `plataforma/` nunca teve cache (`ARCHITECTURE-SPINE.md` lista cache em "Deferred") — só `classificador.py` tinha `.cache_analises.json`, e essa execução não passa por ele. `[ASSUMPTION]` de NFR-1 removida (§4.1). Custo (M-4/NFR-3) também medido na mesma execução: 5 chamadas (uma por lote, sem retry de transporte) totalizando 9.701 tokens (7.035 entrada, 2.666 saída) — dentro do tier gratuito de teste da API do Gemini vigente em 2026-08-10.
