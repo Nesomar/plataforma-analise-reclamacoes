@@ -66,6 +66,45 @@ so that eu calibre a execução sem tocar código e sem conseguir configurar uma
 
 ## Tasks / Subtasks
 
+<<<<<<< HEAD
+- [ ] **Task 1 — Criar `plataforma/config.py`** (AC: 1, 2, 3, 4, 5, 6, 7)
+  - [ ] Declarar os defaults como constantes de módulo: `TAMANHO_LOTE_PADRAO = 10`, `MODELO_PADRAO = "gemini-3.6-flash"`, `FAIXA_LOTE = (2, 25)`
+  - [ ] Comentar o pino do modelo no padrão de `classificador.py:23` — alias móvel invalida comparação de F1 entre execuções
+  - [ ] Comentar que `10` é a premissa de NFR-1 (5 chamadas × lote 10 sobre 50 linhas), **não** um número medido
+  - [ ] Escrever `carregar()` devolvendo um `Config` (`NamedTuple` ou `dataclass(frozen=True)`) com `tamanho_lote: int` e `modelo: str`
+  - [ ] `load_dotenv()` **dentro** de `carregar()`, nunca em escopo de módulo — AC7 exige que o import seja inerte
+  - [ ] Manter `override=False` (o default) e comentar por quê: ambiente real vence `.env`, preservando o `export` documentado no README
+  - [ ] Ler com `os.environ.get(...)` e tratar `None` **e** string vazia/só-espaços como não definido (AC3)
+  - [ ] Validar a faixa e o tipo, levantando `ValueError` com mensagem que nomeia variável, valor observado e faixa
+  - [ ] **Não** expor concorrência (ver *Fora de escopo, com motivo*)
+  - [ ] **Não** ler a chave de API em lugar nenhum do módulo
+
+- [ ] **Task 2 — Atualizar `.env.example`** (AC: 6)
+  - [ ] Acrescentar `TAMANHO_LOTE=` e `MODELO=`, ambos sem valor à direita do `=`
+  - [ ] Comentar acima de cada um o default e a faixa, já que o valor não pode aparecer
+  - [ ] **Preservar CRLF** — o arquivo está em CRLF hoje; escrever linha nova em LF cria terminação mista
+
+- [ ] **Task 3 — Corrigir `README.md`** (AC: 6)
+  - [ ] Linha 25: trocar `export GEMINI_API_KEY=...` por `export GOOGLE_API_KEY=...`
+  - [ ] Documentar `TAMANHO_LOTE` e `MODELO` como configuráveis, com default e faixa
+  - [ ] **Não** tocar em `classificador.py` — ver *Não tocar*
+
+- [ ] **Task 4 — Estender o teste de whitelist de imports** (AC: 7)
+  - [ ] Em `tests/test_contrato.py`, acrescentar `(config, {"os", "dotenv"})` ao `parametrize` de `test_modulos_folha_so_importam_o_que_a_story_permite`
+  - [ ] Ajustar a docstring do teste: hoje diz "nenhum de terceiro", e `dotenv` é terceiro. A regra real é whitelist explícita por módulo — reescrever para isso
+  - [ ] Importar `config` no topo de `test_contrato.py` junto de `estado` e `catalogo`
+
+- [ ] **Task 5 — Criar `tests/test_config.py`** (AC: 1, 2, 3, 4, 5, 7)
+  - [ ] `monkeypatch.setenv` / `delenv` para cada caso — é o primeiro uso de `setenv` no repositório
+  - [ ] **Neutralizar o `.env` real em todo teste**: se existir um `.env` na raiz da máquina de quem roda, `load_dotenv()` o lê e o teste de default falha. Usar `monkeypatch.chdir(tmp_path)` ou passar por cima do carregamento — decidir e comentar a escolha
+  - [ ] Casos de faixa: `1` e `26` levantam; `2` e `25` passam (os limites são inclusivos)
+  - [ ] Casos de tipo: `abc`, `7.5`, `-3` levantam com mensagem nomeando o valor
+  - [ ] Casos de vazio: `TAMANHO_LOTE=` e `MODELO=` adotam o default
+  - [ ] Um teste que asserta que **importar** `config` com `TAMANHO_LOTE=99` não levanta (AC7)
+  - [ ] Um teste que asserta que a mensagem de erro contém `"2"` e `"25"` e o valor observado
+  - [ ] Escrever `2` e `25` **à mão** no teste, não importar `FAIXA_LOTE` — a fonte duplicada é deliberada, no padrão de `CAMPOS_ESPERADOS` em `tests/test_contrato.py:22-23`
+  - [ ] Rodar `uv run pytest` e confirmar verde
+=======
 - [x] **Task 1 — Criar `plataforma/config.py`** (AC: 1, 2, 3, 4, 5, 6, 7)
   - [x] Declarar os defaults como constantes de módulo: `TAMANHO_LOTE_PADRAO = 10`, `MODELO_PADRAO = "gemini-3.6-flash"`, `FAIXA_LOTE = (2, 25)`
   - [x] Comentar o pino do modelo no padrão de `classificador.py:23` — alias móvel invalida comparação de F1 entre execuções
@@ -103,6 +142,7 @@ so that eu calibre a execução sem tocar código e sem conseguir configurar uma
   - [x] Um teste que asserta que a mensagem de erro contém `"2"` e `"25"` e o valor observado
   - [x] Escrever `2` e `25` **à mão** no teste, não importar `FAIXA_LOTE` — a fonte duplicada é deliberada, no padrão de `CAMPOS_ESPERADOS` em `tests/test_contrato.py:22-23`
   - [x] Rodar `uv run pytest` e confirmar verde
+>>>>>>> bcadcec019746aae779bf4d670d339d5902269d1
 
 ## Dev Notes
 
@@ -263,6 +303,13 @@ tests/
 
 ### Agent Model Used
 
+<<<<<<< HEAD
+### Debug Log References
+
+### Completion Notes List
+
+### File List
+=======
 claude-opus-5, via o workflow `bmad-dev-auto`. Spec derivado:
 `spec-1-2-configuracao-validada-antes-de-qualquer-chamada-paga.md`.
 
@@ -319,3 +366,4 @@ varre a fonte do módulo e confere os campos de `Config`.
 - `README.md` — `GOOGLE_API_KEY` no lugar de `GEMINI_API_KEY`; seção "Configuração"
 - `tests/test_contrato.py` — `config` na whitelist de imports; docstring reescrita
 - `tests/test_import_sem_credencial.py` — `plataforma.config` em `MODULOS`
+>>>>>>> bcadcec019746aae779bf4d670d339d5902269d1
