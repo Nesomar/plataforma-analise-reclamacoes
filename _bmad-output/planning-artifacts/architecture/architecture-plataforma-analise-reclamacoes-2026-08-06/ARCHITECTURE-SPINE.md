@@ -77,11 +77,13 @@ O mapeamento é direto: um módulo por filtro, o estado em um módulo próprio q
 - **Prevents:** retry no nível do nó re-executar todos os lotes e gastar token nos que já haviam voltado corretos
 - **Rule:** `carregar` emite um `Send` por lote para `analisar_lote`. `analises` e `falhas` são acumuladas pelo redutor `add`; nenhum lote lê o resultado de outro.
 
-### AD-9 — Repetição é política do nó, não código no nó
+### AD-9 — Repetição é política declarada, absorvida dentro do nó `[REVISADO 2026-08-08]`
 
 - **Binds:** `grafo`, `analise`, NFR-4
-- **Prevents:** backoff reimplementado à mão divergindo do que o framework já garante, e a reanálise por desenho que NFR-4 proíbe se confundindo com repetição por transporte
-- **Rule:** `retry_policy=` no `add_node` de `analisar_lote` cobre falha de transporte; o código do nó não tem laço de repetição. **`error_handler=` no mesmo `add_node` é obrigatório** e é quem produz a `Falha` de AD-5 — sem ele, retry esgotado propaga a exceção e aborta o grafo inteiro, e AD-5, AD-6, AD-13, FR-2 e NFR-6 ficam sem caminho de execução. O teto de custo do fan-out é o número de lotes (AD-17), não a concorrência: `max_concurrency` só é honrado pelo executor assíncrono, e o v1 invoca de forma síncrona.
+- **Prevents:** backoff reimplementado mal (sem classificar erro transitório de permanente), e a reanálise por desenho que NFR-4 proíbe se confundindo com repetição por transporte
+- **Rule (revisada):** a intenção original — `retry_policy=`/`error_handler=` no `add_node` de `analisar_lote`, sem laço de repetição no código do nó — **não se sustentou**. Investigação empírica na Story 1.6 (2026-08-08) contra `langgraph==1.2.10` mostrou que `error_handler` executa mas **não impede a exceção original de abortar `.invoke()`** quando há mais de uma task concorrente no mesmo step — exatamente o caso do fan-out via `Send` que este AD deveria proteger. Testado em 6 configurações (`invoke` puro, com `checkpointer`, `durability=sync/exit`, `.stream()`); só o caso de nó único sem concorrência funciona como a documentação da lib descreve. Registro completo em `plataforma/analise.py` e no spec da Story 1.6.
+  **Regra atual:** `analisar_lote` (não `grafo.py`) é dono da repetição — `_chamar_com_retry` com backoff exponencial e classificação de erro transitório vs. permanente (`_deve_repetir`), e nunca deixa exceção escapar: falha de transporte esgotada vira `Falha` como retorno normal, mesmo formato que o desvio de conteúdo (`response.parsed is None`) já usava. `grafo.py` não declara `retry_policy` nem `error_handler` no `add_node` de `analisar_lote` — são inertes, já que o nó nunca levanta.
+  O teto de custo do fan-out continua sendo o número de lotes (AD-17), não a concorrência: `max_concurrency` só é honrado pelo executor assíncrono, e o v1 invoca de forma síncrona.
 
 ### AD-10 — O relatório é template com dados injetados
 

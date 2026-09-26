@@ -15,6 +15,7 @@ venv/
 
 # Saída gerada
 relatorio*.html
+relatorio*.html.tmp
 saida/
 .cache_analises.json
 

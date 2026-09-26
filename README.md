@@ -22,10 +22,22 @@ Duas leituras, ambas verdadeiras. O LLM se validou — reconstruiu a categoriza�
 
 ```bash
 uv sync
-export GEMINI_API_KEY=...   # veja .env.example
+export GOOGLE_API_KEY=...   # veja .env.example
 uv run python baseline.py       # linha de base determinística
 uv run python classificador.py  # classificador com Gemini
 ```
+
+## Configuração
+
+Tudo por variável de ambiente ou `.env` (copie de `.env.example`). Variável real de ambiente vence o `.env`; variável ausente ou vazia adota o default.
+
+| Variável | Default | Faixa |
+|---|---|---|
+| `GOOGLE_API_KEY` | — | obrigatória em execução com modelo; nunca versionada |
+| `TAMANHO_LOTE` | `10` | inteiro de `2` a `25` — fora disso a execução encerra antes de qualquer chamada paga |
+| `MODELO` | `gemini-3.6-flash` | qualquer modelo; trocar invalida a comparação de F1 entre execuções |
+
+Só `TAMANHO_LOTE` é validado na carga. Nome de modelo inexistente não é conferido — verificar exigiria consultar a API — e falha na primeira chamada paga.
 
 ## Documentos
 
